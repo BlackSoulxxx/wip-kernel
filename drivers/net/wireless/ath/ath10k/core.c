@@ -1555,13 +1555,13 @@ static int ath10k_core_pre_cal_config(struct ath10k *ar)
 	}
 
 	ret = ath10k_core_get_board_id_from_otp(ar);
-	if (ret) {
+	if (ret && ret != -EOPNOTSUPP) {
 		ath10k_err(ar, "failed to get board id: %d\n", ret);
 		return ret;
 	}
 
 	ret = ath10k_download_and_run_otp(ar);
-	if (ret) {
+	if (ret && ret != -EOPNOTSUPP) {
 		ath10k_err(ar, "failed to run otp: %d\n", ret);
 		return ret;
 	}
