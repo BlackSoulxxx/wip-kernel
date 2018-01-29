@@ -2291,6 +2291,7 @@ static void vmx_vcpu_load(struct kvm_vcpu *vcpu, int cpu)
 	if (per_cpu(current_vmcs, cpu) != vmx->loaded_vmcs->vmcs) {
 		per_cpu(current_vmcs, cpu) = vmx->loaded_vmcs->vmcs;
 		vmcs_load(vmx->loaded_vmcs->vmcs);
+		indirect_branch_prediction_barrier();
 	}
 
 	if (!already_loaded) {
@@ -6829,6 +6830,9 @@ static __init int hardware_setup(void)
 		kvm_max_tsc_scaling_ratio = KVM_VMX_TSC_MULTIPLIER_MAX;
 		kvm_tsc_scaling_ratio_frac_bits = 48;
 	}
+
+	if (boot_cpu_has(X86_FEATURE_IBPB))
+		vmx_disable_intercept_for_msr(MSR_IA32_PRED_CMD, false);
 
 	vmx_disable_intercept_for_msr(MSR_FS_BASE, false);
 	vmx_disable_intercept_for_msr(MSR_GS_BASE, false);
