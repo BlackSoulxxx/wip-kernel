@@ -43,8 +43,11 @@ do
 done
 
 [ "$clean" = 1 ] && rm -rf ${AUFS}
-git add mm/prfile.c
-git add -u
-find . -name "*.orig" | xargs rm
-find . |grep aufs | xargs git add
-git commit -s -m"UBUNTU: SAUCE: Add AUFS"
+
+#git add mm/prfile.c
+#git add -u
+#find . -name "*.orig" | xargs rm
+#find . |grep aufs | xargs git add
+#git commit -s -m"UBUNTU: SAUCE: Add AUFS"
+
+exit 0
