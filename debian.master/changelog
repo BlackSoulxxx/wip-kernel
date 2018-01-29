@@ -1,3 +1,9 @@
+linux (4.15.0-wip-x1) unstable; urgency=low
+
+  Ubuntu kernel 4.15 by AndyLavr (c) WIP Patched Kernel Sources
+
+ -- Andrei Lavreniyuk <andy.lavr@gmail.com>  Mon, 29 Jan 2018 15:00:00 +0000
+
 linux (4.15.0-wip) unstable; urgency=low
 
   Ubuntu kernel 4.15 by AndyLavr (c) WIP Patched Kernel Sources
