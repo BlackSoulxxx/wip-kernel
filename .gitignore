@@ -64,6 +64,8 @@ modules.builtin
 # Debian directory (make deb-pkg)
 #
 #/debian/
+update-aufs.sh
+update-zfs.sh
 
 #
 # tar directory (make tar*-pkg)
