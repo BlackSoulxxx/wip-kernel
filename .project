@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<projectDescription>
+	<name>WIP_Kernel_4.15</name>
+	<comment>WIP Ubuntu/Debian kernel 4.15 (Forked from http://zen-kernel.org)</comment>
+	<projects>
+	</projects>
+	<buildSpec>
+	</buildSpec>
+	<natures>
+	</natures>
+</projectDescription>
