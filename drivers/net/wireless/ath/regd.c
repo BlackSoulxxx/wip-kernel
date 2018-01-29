@@ -703,7 +703,7 @@ static int __ath_regd_init(struct ath_regulatory *reg)
 	    regdmn == CTRY_DEFAULT) {
 		printk(KERN_DEBUG "ath: EEPROM indicates default "
 		       "country code should be used\n");
-		reg->country_code = CTRY_UNITED_STATES;
+		reg->country_code = CTRY_UKRAINE;
 	}
 
 	if (reg->country_code == CTRY_DEFAULT) {
