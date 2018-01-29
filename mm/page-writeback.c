@@ -72,7 +72,7 @@ static long ratelimit_pages = 32;
  * Start background writeback (via writeback threads) at this percentage
  */
 #ifdef CONFIG_ZEN_INTERACTIVE
-int dirty_background_ratio = 20;
+int dirty_background_ratio = 5;
 #else
 int dirty_background_ratio = 10;
 #endif
