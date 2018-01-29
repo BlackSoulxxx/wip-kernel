@@ -550,8 +550,13 @@ static int add_call_destinations(struct objtool_file *file)
 			 */
 #if 0
 			if (!insn->call_dest) {
+#if 0
+				/* Compilers with -mindirect-branch=thunk-extern trigger
+				 * this everywhere on x86. Disable for now.
+				 */
 				WARN_FUNC("can't find call dest symbol at offset 0x%lx",
 					  insn->sec, insn->offset, dest_off);
+#endif
 				return -1;
 			}
 #endif
@@ -1773,8 +1778,14 @@ static int validate_branch(struct objtool_file *file, struct instruction *first,
 					return 1;
 
 			} else if (func && has_modified_stack_frame(&state)) {
+#if 0
+				/* Compilers with -mindirect-branch=thunk-extern trigger
+				 * this everywhere on x86. Disable for now.
+				 */
+
 				WARN_FUNC("sibling call from callable instruction with modified stack frame",
 					  sec, insn->offset);
+#endif
 				return 1;
 			}
 
