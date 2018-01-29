@@ -583,11 +583,12 @@ blk_queue_discard_granularity(struct request_queue *q, unsigned int dg)
 
 /*
  * Default Linux IO Scheduler,
- * Setting the scheduler to noop will allow the Linux IO scheduler to
+ * Setting the scheduler to none will allow the Linux IO scheduler to
  * still perform front and back merging, while leaving the request
  * ordering and prioritization to the ZFS IO scheduler.
+ * In 4.15 noop was renamed to none
  */
-#define	VDEV_SCHEDULER			"noop"
+#define	VDEV_SCHEDULER			"none"
 
 /*
  * A common holder for vdev_bdev_open() is used to relax the exclusive open
