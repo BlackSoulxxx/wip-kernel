@@ -9,6 +9,8 @@
 #include <asm/nospec-branch.h>
 #include <asm/bitsperlong.h>
 
+#ifdef CONFIG_RETPOLINE
+
 .macro THUNK reg
 	.section .text.__x86.indirect_thunk
 
@@ -47,6 +49,8 @@ GENERATE_THUNK(r13)
 GENERATE_THUNK(r14)
 GENERATE_THUNK(r15)
 #endif
+
+#endif /* CONFIG_RETPOLINE */
 
 /*
  * Fill the CPU return stack buffer.

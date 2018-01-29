@@ -154,12 +154,10 @@ extern char __indirect_thunk_end[];
  */
 static inline void vmexit_fill_RSB(void)
 {
-#ifdef CONFIG_RETPOLINE
 	alternative_input("",
 			  "call __fill_rsb",
 			  X86_FEATURE_RETPOLINE,
 			  ASM_NO_INPUT_CLOBBER(_ASM_BX, "memory"));
-#endif
 }
 
 static inline void indirect_branch_prediction_barrier(void)
