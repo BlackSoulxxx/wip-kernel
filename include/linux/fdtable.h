@@ -10,7 +10,6 @@
 #include <linux/compiler.h>
 #include <linux/spinlock.h>
 #include <linux/rcupdate.h>
-#include <linux/nospec.h>
 #include <linux/types.h>
 #include <linux/init.h>
 #include <linux/fs.h>
@@ -82,11 +81,9 @@ struct dentry;
 static inline struct file *__fcheck_files(struct files_struct *files, unsigned int fd)
 {
 	struct fdtable *fdt = rcu_dereference_raw(files->fdt);
-	struct file __rcu **fdp;
 
-	fdp = array_ptr(fdt->fd, fd, fdt->max_fds);
-	if (fdp)
-		return rcu_dereference_raw(*fdp);
+	if (fd < fdt->max_fds)
+		return rcu_dereference_raw(fdt->fd[fd]);
 	return NULL;
 }
 
