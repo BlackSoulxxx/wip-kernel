@@ -11,7 +11,7 @@ WIP Patched Kernel Sources (Linux 4.15)
 ## Important security fix:
 
 
-#### Built on the latest GCC 7.3.0 (+ add fix full LFENCE).
+#### Recommended built on the latest GCC 7.3
 
 
 Current status of this kernel for the Spectre and Meltdown vulnerabilities
@@ -76,21 +76,21 @@ Hardware check
 
 ```bash
  This is a mainline Linux kernel distribution with custom settings.
-Optimized to take full advantage of high-performance for MSI GT80 2QE Titan SLI.
+Optimized to take full advantage of high-performance.
 
 Supports all recent 64-bit versions of Debian and Ubuntu-based systems. 
 
 Main Features:
 
-Tuned CPU for Intel i7 platform.
+Tuned CPU for Intel i5/i7/Atom platform.
 PDS CPU Scheduler & Multi-Queue I/O Block Layer w/ BFQ-MQ for smoothness and responsiveness.
 Caching, Virtual Memory Manager and CPU Governor Improvements.
 General-purpose Multitasking Kernel.
-Built on the latest GCC 7.
+Built on the latest GCC 7.3
 DRM Optimized Performance.
 BBR TCP Congestion Control.
 Intel CPUFreq (P-State passive mode).
-AUFS, BFQ and Ureadahead support available.
+ZFS, AUFS, BFQ and Ureadahead support available.
 ```
 
 ### Kernel config file
