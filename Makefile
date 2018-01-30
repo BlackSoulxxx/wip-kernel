@@ -2,7 +2,7 @@
 VERSION = 4
 PATCHLEVEL = 15
 SUBLEVEL = 0
-EXTRAVERSION = -wip-x1
+EXTRAVERSION = -wip-x2
 NAME = Supercritical Solace
 
 # *DOCUMENTATION*

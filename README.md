@@ -20,6 +20,11 @@ Current status of this kernel for the Spectre and Meltdown vulnerabilities
 Spectre and Meltdown mitigation detection tool
 
 Checking for vulnerabilities on current system
+Kernel is Linux 4.15.0-wip-x2-lowlatency #x2-Ubuntu WIP SMP PREEMPT Tue Jan 30 12:39:47 EET 2018 x86_64
+CPU is Intel(R) Core(TM) i7-5950HQ CPU @ 2.90GHz
+Will use vmlinux image /boot/vmlinuz-4.15.0-wip-x2-lowlatency
+Will use kconfig /proc/config.gz (decompressed)
+Will use System.map file /proc/kallsyms
 
 Hardware check
 * Hardware support (CPU microcode) for mitigation techniques
@@ -43,12 +48,13 @@ Hardware check
   * Vulnerable to Variant 2:  YES
   * Vulnerable to Variant 3:  YES
 
-#### CVE-2017-5753 [bounds check bypass] aka 'Spectre Variant 1'
-* Mitigated according to the /sys interface:  NO  (kernel confirms your system is vulnerable)
-* Checking count of LFENCE opcodes in kernel:  YES
-#### > STATUS:  NOT VULNERABLE  (392450 opcodes found, which is >= 70, heuristic to be improved when official patches become available)
+CVE-2017-5753 [bounds check bypass] aka 'Spectre Variant 1'
+* Mitigated according to the /sys interface:  YES  (kernel confirms that the mitigation is active)
+* Kernel has array_index_mask_nospec:  YES  (1 occurence(s) found of 64 bits array_index_mask_nospec())
+* Checking count of LFENCE opcodes in kernel:  YES  (397460 opcodes found, which is >= 70, heuristic to be improved when official patches become available)
+> STATUS:  NOT VULNERABLE  (Mitigation: __user pointer sanitization)
 
-#### CVE-2017-5715 [branch target injection] aka 'Spectre Variant 2'
+CVE-2017-5715 [branch target injection] aka 'Spectre Variant 2'
 * Mitigated according to the /sys interface:  YES  (kernel confirms that the mitigation is active)
 * Mitigation 1
   * Kernel is compiled with IBRS/IBPB support:  YES
@@ -60,9 +66,9 @@ Hardware check
   * Kernel compiled with retpoline option:  YES
   * Kernel compiled with a retpoline-aware compiler:  YES  (kernel reports full retpoline compilation)
   * Retpoline enabled:  YES
-#### > STATUS:  NOT VULNERABLE  (Mitigation: Full generic retpoline)
+> STATUS:  NOT VULNERABLE  (Mitigation: Full generic retpoline)
 
-#### CVE-2017-5754 [rogue data cache load] aka 'Meltdown' aka 'Variant 3'
+CVE-2017-5754 [rogue data cache load] aka 'Meltdown' aka 'Variant 3'
 * Mitigated according to the /sys interface:  YES  (kernel confirms that the mitigation is active)
 * Kernel supports Page Table Isolation (PTI):  YES
 * PTI enabled and active:  YES
@@ -70,7 +76,7 @@ Hardware check
   * CPU supports PCID:  YES  (performance degradation with PTI will be limited)
   * CPU supports INVPCID:  YES  (performance degradation with PTI will be limited)
 * Running as a Xen PV DomU:  NO
-#### > STATUS:  NOT VULNERABLE  (Mitigation: PTI)
+> STATUS:  NOT VULNERABLE  (Mitigation: PTI)
 
 
 
