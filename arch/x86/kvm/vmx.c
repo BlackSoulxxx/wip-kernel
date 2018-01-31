@@ -34,7 +34,6 @@
 #include <linux/tboot.h>
 #include <linux/hrtimer.h>
 #include <linux/frame.h>
-#include <linux/nospec.h>
 #include "kvm_cache_regs.h"
 #include "x86.h"
 
@@ -903,18 +902,21 @@ static const unsigned short vmcs_field_to_offset_table[] = {
 
 static inline short vmcs_field_to_offset(unsigned long field)
 {
-	const size_t size = ARRAY_SIZE(vmcs_field_to_offset_table);
-	unsigned short offset;
+	BUILD_BUG_ON(ARRAY_SIZE(vmcs_field_to_offset_table) > SHRT_MAX);
 
-	BUILD_BUG_ON(size > SHRT_MAX);
-	if (field >= size)
+	if (field >= ARRAY_SIZE(vmcs_field_to_offset_table))
 		return -ENOENT;
 
-	field = array_index_nospec(field, size);
-	offset = vmcs_field_to_offset_table[field];
-	if (offset == 0)
+	/*
+	 * FIXME: Mitigation for CVE-2017-5753.  To be replaced with a
+	 * generic mechanism.
+	 */
+	asm("lfence");
+
+	if (vmcs_field_to_offset_table[field] == 0)
 		return -ENOENT;
-	return offset;
+
+	return vmcs_field_to_offset_table[field];
 }
 
 static inline struct vmcs12 *get_vmcs12(struct kvm_vcpu *vcpu)
@@ -3380,6 +3382,10 @@ static int vmx_set_msr(struct kvm_vcpu *vcpu, struct msr_data *msr_info)
 		if (cpu_has_vmx_msr_bitmap() && data &&
 		    !vmx->save_spec_ctrl_on_exit) {
 			vmx->save_spec_ctrl_on_exit = true;
+
+			if (is_guest_mode(vcpu))
+				break;
+
 			vmx_disable_intercept_for_msr(vmx->vmcs01.msr_bitmap,
 						      MSR_IA32_SPEC_CTRL,
 						      MSR_TYPE_RW);
@@ -3397,8 +3403,12 @@ static int vmx_set_msr(struct kvm_vcpu *vcpu, struct msr_data *msr_info)
 			break;
 
 		wrmsrl(MSR_IA32_PRED_CMD, PRED_CMD_IBPB);
-		vmx_disable_intercept_for_msr(vmx->vmcs01.msr_bitmap,
-					      MSR_IA32_PRED_CMD, MSR_TYPE_W);
+
+		if (is_guest_mode())
+			break;
+
+		vmx_disable_intercept_for_msr(vmx->vmcs01.msr_bitmap, MSR_IA32_PRED_CMD,
+					      MSR_TYPE_W);
 		break;
 	case MSR_IA32_ARCH_CAPABILITIES:
 		if (!msr_info->host_initiated)
@@ -10134,7 +10144,9 @@ static inline bool nested_vmx_merge_msr_bitmap(struct kvm_vcpu *vcpu,
 	unsigned long *msr_bitmap_l0 = to_vmx(vcpu)->nested.vmcs02.msr_bitmap;
 
 	/* This shortcut is ok because we support only x2APIC MSRs so far. */
-	if (!nested_cpu_has_virt_x2apic_mode(vmcs12))
+	if (!nested_cpu_has_virt_x2apic_mode(vmcs12) &&
+	    !guest_cpuid_has(vcpu, X86_FEATURE_IBRS) &&
+	    !guest_cpuid_has(vcpu, X86_FEATURE_IBPB))
 		return false;
 
 	page = kvm_vcpu_gpa_to_page(vcpu, vmcs12->msr_bitmap);
@@ -10167,6 +10179,21 @@ static inline bool nested_vmx_merge_msr_bitmap(struct kvm_vcpu *vcpu,
 				MSR_TYPE_W);
 		}
 	}
+
+	if (guest_cpuid_has(vcpu, X86_FEATURE_IBRS)) {
+		nested_vmx_disable_intercept_for_msr(
+				msr_bitmap_l1, msr_bitmap_l0,
+				MSR_IA32_SPEC_CTRL,
+				MSR_TYPE_R | MSR_TYPE_W);
+	}
+
+	if (guest_cpuid_has(vcpu, X86_FEATURE_IBPB)) {
+		nested_vmx_disable_intercept_for_msr(
+				msr_bitmap_l1, msr_bitmap_l0,
+				MSR_IA32_PRED_CMD,
+				MSR_TYPE_R);
+	}
+
 	kunmap(page);
 	kvm_release_page_clean(page);
 
