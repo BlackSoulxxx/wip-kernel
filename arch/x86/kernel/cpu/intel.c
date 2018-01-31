@@ -182,7 +182,6 @@ static void early_init_intel(struct cpuinfo_x86 *c)
 	     cpu_has(c, X86_FEATURE_IBRS) || cpu_has(c, X86_FEATURE_IBPB) ||
 	     cpu_has(c, X86_FEATURE_STIBP)) && bad_spectre_microcode(c)) {
 		pr_warn("Intel Spectre v2 broken microcode detected; microcode update recommended\n");
-		pr_warn("Enable IBRS/IBPB Speculation Control\n");
 	}
 
 	/*
