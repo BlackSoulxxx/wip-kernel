@@ -3404,7 +3404,7 @@ static int vmx_set_msr(struct kvm_vcpu *vcpu, struct msr_data *msr_info)
 
 		wrmsrl(MSR_IA32_PRED_CMD, PRED_CMD_IBPB);
 
-		if (is_guest_mode())
+		if (is_guest_mode(vcpu))
 			break;
 
 		vmx_disable_intercept_for_msr(vmx->vmcs01.msr_bitmap, MSR_IA32_PRED_CMD,
