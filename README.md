@@ -2,7 +2,7 @@
 WIP Patched Kernel Sources (Linux 4.15)
 
 
-## Add support:
+## Full support:
  
  - Indirect Branch Restricted Speculation (IBRS)
  - Indirect Branch Prediction Barrier (IBPB)
@@ -20,18 +20,18 @@ Current status of this kernel for the Spectre and Meltdown vulnerabilities
 Spectre and Meltdown mitigation detection tool
 
 Checking for vulnerabilities on current system
-Kernel is Linux 4.15.0-wip-x2-lowlatency #x2-Ubuntu WIP SMP PREEMPT Tue Jan 30 12:39:47 EET 2018 x86_64
+Kernel is Linux 4.15.0-wip-x4-lowlatency #x4-Ubuntu WIP SMP PREEMPT Wed Jan 31 18:20:50 EET 2018 x86_64
 CPU is Intel(R) Core(TM) i7-5950HQ CPU @ 2.90GHz
-Will use vmlinux image /boot/vmlinuz-4.15.0-wip-x2-lowlatency
+Will use vmlinux image /boot/vmlinuz-4.15.0-wip-x4-lowlatency
 Will use kconfig /proc/config.gz (decompressed)
 Will use System.map file /proc/kallsyms
 
 Hardware check
 * Hardware support (CPU microcode) for mitigation techniques
   * Indirect Branch Restricted Speculation (IBRS)
-    * SPEC_CTRL MSR is available:  YES
+    * SPEC_CTRL MSR is available:  YES 
     * CPU indicates IBRS capability:  YES  (SPEC_CTRL feature bit)
-    * Kernel has set the spec_ctrl flag in cpuinfo:  NO
+    * Kernel has set the spec_ctrl flag in cpuinfo:  NO 
   * Indirect Branch Prediction Barrier (IBPB)
     * PRED_CMD MSR is available:  YES
     * CPU indicates IBPB capability:  YES  (SPEC_CTRL feature bit)
@@ -42,39 +42,54 @@ Hardware check
     * CPU indicates ARCH_CAPABILITIES MSR availability:  NO
     * ARCH_CAPABILITIES MSR advertises IBRS_ALL capability:  NO
   * CPU explicitly indicates not being vulnerable to Meltdown (RDCL_NO):  NO
-  * CPU microcode is known to cause stability problems:  NO
+  * CPU microcode is known to cause stability problems:
+  YES  (model 71 stepping 1 ucode 0x1b)
+
+The microcode your CPU is running on is known to cause instability problems,
+such as intempestive reboots or random crashes.
+You are advised to either revert to a previous microcode version (that might not have
+the mitigations for Spectre), or upgrade to a newer one if available.
+
 * CPU vulnerability to the three speculative execution attacks variants
-  * Vulnerable to Variant 1:  YES
-  * Vulnerable to Variant 2:  YES
-  * Vulnerable to Variant 3:  YES
+  * Vulnerable to Variant 1:  YES (Enable Mitigation: __user pointer sanitization)
+  * Vulnerable to Variant 2:  YES (Enable Mitigation: PTI)
+  * Vulnerable to Variant 3:  YES (Enable Mitigation: Full generic retpoline, IBPB)
 
 CVE-2017-5753 [bounds check bypass] aka 'Spectre Variant 1'
-* Mitigated according to the /sys interface:  YES  (kernel confirms that the mitigation is active)
-* Kernel has array_index_mask_nospec:  YES  (1 occurence(s) found of 64 bits array_index_mask_nospec())
-* Checking count of LFENCE opcodes in kernel:  YES  (397460 opcodes found, which is >= 70, heuristic to be improved when official patches become available)
+* Mitigated according to the /sys interface:
+  YES  (kernel confirms that the mitigation is active)
+* Kernel has array_index_mask_nospec:
+  YES  (1 occurence(s) found of 64 bits array_index_mask_nospec())
+* Checking count of LFENCE instructions following a jump in kernel:
+  YES  (1839 jump-then-lfence instructions found, which is >= 30 (heuristic))
 > STATUS:  NOT VULNERABLE  (Mitigation: __user pointer sanitization)
 
 CVE-2017-5715 [branch target injection] aka 'Spectre Variant 2'
-* Mitigated according to the /sys interface:  YES  (kernel confirms that the mitigation is active)
+* Mitigated according to the /sys interface:
+  YES  (kernel confirms that the mitigation is active)
 * Mitigation 1
   * Kernel is compiled with IBRS/IBPB support:  YES
   * Currently enabled features
-    * IBRS enabled for Kernel space:  DISABLE
-    * IBRS enabled for User space:  DISABLE
-    * IBPB enabled:  DISABLE
+    * IBRS enabled for Kernel space:  NO
+    * IBRS enabled for User space:  NO
+    * IBPB enabled:  YES
 * Mitigation 2
   * Kernel compiled with retpoline option:  YES
-  * Kernel compiled with a retpoline-aware compiler:  YES  (kernel reports full retpoline compilation)
+  * Kernel compiled with a retpoline-aware compiler:
+  YES  (kernel reports full retpoline compilation)
   * Retpoline enabled:  YES
-> STATUS:  NOT VULNERABLE  (Mitigation: Full generic retpoline)
+> STATUS:  NOT VULNERABLE  (Mitigation: Full generic retpoline, IBPB)
 
 CVE-2017-5754 [rogue data cache load] aka 'Meltdown' aka 'Variant 3'
-* Mitigated according to the /sys interface:  YES  (kernel confirms that the mitigation is active)
+* Mitigated according to the /sys interface:
+  YES  (kernel confirms that the mitigation is active)
 * Kernel supports Page Table Isolation (PTI):  YES
 * PTI enabled and active:  YES
 * Performance impact if PTI is enabled
-  * CPU supports PCID:  YES  (performance degradation with PTI will be limited)
-  * CPU supports INVPCID:  YES  (performance degradation with PTI will be limited)
+  * CPU supports PCID:
+  YES  (performance degradation with PTI will be limited)
+  * CPU supports INVPCID:
+  YES  (performance degradation with PTI will be limited)
 * Running as a Xen PV DomU:  NO
 > STATUS:  NOT VULNERABLE  (Mitigation: PTI)
 
@@ -123,7 +138,7 @@ BUILDBOX automatically builds the packages. Look at the file date and the build 
 - /etc/default/grub
 
 ```bash
-GRUB_CMDLINE_LINUX_DEFAULT="spectre_v2=ibrs ipv6.disable=1 intremap=no_x2apic_optout acpi_osi=Linux intel_iommu=on swiotlb=32768 apparmor=0"
+GRUB_CMDLINE_LINUX_DEFAULT="spectre_v2=auto ipv6.disable=1 intremap=no_x2apic_optout acpi_osi=Linux intel_iommu=on swiotlb=32768 apparmor=0"
 GRUB_CMDLINE_LINUX="systemd.gpt_auto=0"
 ```
 
@@ -211,7 +226,7 @@ net.core.default_qdisc = fq_codel
 net.ipv4.tcp_fastopen = 3
 #
 # Lowlatency Kernel Tuning
-kernel.perf_cpu_time_max_percent=0
+kernel.perf_cpu_time_max_percent=100
 #
 # IO shedulers
 vm.dirty_background_bytes=67108864
