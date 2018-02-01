@@ -184,9 +184,6 @@ struct vcpu_svm {
 		u64 gs_base;
 	} host;
 
-	u64 spec_ctrl;
-	bool save_spec_ctrl_on_exit;
-
 	u32 *msrpm;
 
 	ulong nmi_iret_rip;
@@ -253,6 +250,7 @@ static const struct svm_direct_access_msrs {
 	{ .index = MSR_SYSCALL_MASK,			.always = true  },
 #endif
 	{ .index = MSR_IA32_LASTBRANCHFROMIP,		.always = false },
+	{ .index = MSR_IA32_PRED_CMD,			.always = false },
 	{ .index = MSR_IA32_LASTBRANCHTOIP,		.always = false },
 	{ .index = MSR_IA32_LASTINTFROMIP,		.always = false },
 	{ .index = MSR_IA32_LASTINTTOIP,		.always = false },
@@ -1585,8 +1583,6 @@ static void svm_vcpu_reset(struct kvm_vcpu *vcpu, bool init_event)
 	struct vcpu_svm *svm = to_svm(vcpu);
 	u32 dummy;
 	u32 eax = 1;
-
-	svm->spec_ctrl = 0;
 
 	if (!init_event) {
 		svm->vcpu.arch.apic_base = APIC_DEFAULT_PHYS_BASE |
@@ -3609,13 +3605,6 @@ static int svm_get_msr(struct kvm_vcpu *vcpu, struct msr_data *msr_info)
 	case MSR_VM_CR:
 		msr_info->data = svm->nested.vm_cr_msr;
 		break;
-	case MSR_IA32_SPEC_CTRL:
-		if (!msr_info->host_initiated &&
-		    !guest_cpuid_has(vcpu, X86_FEATURE_IBRS))
-			return 1;
-
-		msr_info->data = svm->spec_ctrl;
-		break;
 	case MSR_IA32_UCODE_REV:
 		msr_info->data = 0x01000065;
 		break;
@@ -3707,28 +3696,6 @@ static int svm_set_msr(struct kvm_vcpu *vcpu, struct msr_data *msr)
 	case MSR_IA32_TSC:
 		kvm_write_tsc(vcpu, msr);
 		break;
-	case MSR_IA32_SPEC_CTRL:
-		if (!msr->host_initiated &&
-		    !guest_cpuid_has(vcpu, X86_FEATURE_IBRS))
-			return 1;
-
-		/* The STIBP bit doesn't fault even if it's not advertised */
-		if (data & ~(SPEC_CTRL_IBRS | SPEC_CTRL_STIBP))
-			return 1;
-
-		svm->spec_ctrl = data;
-
-		/*
-		 * When it's written (to non-zero) for the first time, pass
-		 * it through. This means we don't have to take the perf
-		 * hit of saving it on vmexit for the common case of guests
-		 * that don't use it.
-		 */
-		if (data && !svm->save_spec_ctrl_on_exit) {
-			svm->save_spec_ctrl_on_exit = true;
-			set_msr_interception(svm->msrpm, MSR_IA32_PRED_CMD, 1, 1);
-		}
-		break;
 	case MSR_IA32_PRED_CMD:
 		if (!msr->host_initiated &&
 		    !guest_cpuid_has(vcpu, X86_FEATURE_IBPB))
@@ -3741,6 +3708,8 @@ static int svm_set_msr(struct kvm_vcpu *vcpu, struct msr_data *msr)
 			break;
 
 		wrmsrl(MSR_IA32_PRED_CMD, PRED_CMD_IBPB);
+		if (is_guest_mode(vcpu))
+			break;
 		set_msr_interception(svm->msrpm, MSR_IA32_PRED_CMD, 0, 1);
 		break;
 	case MSR_STAR:
@@ -4995,15 +4964,6 @@ static void svm_vcpu_run(struct kvm_vcpu *vcpu)
 
 	local_irq_enable();
 
-	/*
-	 * If this vCPU has touched SPEC_CTRL, restore the guest's value if
-	 * it's non-zero. Since vmentry is serialising on affected CPUs, there
-	 * is no need to worry about the conditional branch over the wrmsr
-	 * being speculatively taken.
-	 */
-	if (svm->spec_ctrl)
-		wrmsrl(MSR_IA32_SPEC_CTRL, svm->spec_ctrl);
-
 	asm volatile (
 		"push %%" _ASM_BP "; \n\t"
 		"mov %c[rbx](%[svm]), %%" _ASM_BX " \n\t"
@@ -5095,19 +5055,6 @@ static void svm_vcpu_run(struct kvm_vcpu *vcpu)
 		, "ebx", "ecx", "edx", "esi", "edi"
 #endif
 		);
-
-	/*
-	 * We do not use IBRS in the kernel. If this vCPU has used the
-	 * SPEC_CTRL MSR it may have left it on; save the value and
-	 * turn it off. This is much more efficient than blindly adding
-	 * it to the atomic save/restore list. Especially as the former
-	 * (Saving guest MSRs on vmexit) doesn't even exist in KVM.
-	 */
-	if (svm->save_spec_ctrl_on_exit)
-		rdmsrl(MSR_IA32_SPEC_CTRL, svm->spec_ctrl);
-
-	if (svm->spec_ctrl)
-		wrmsrl(MSR_IA32_SPEC_CTRL, 0);
 
 	/* Eliminate branch target predictions from guest mode */
 	vmexit_fill_RSB();
