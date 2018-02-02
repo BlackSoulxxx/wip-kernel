@@ -34,7 +34,6 @@
 #include <linux/tboot.h>
 #include <linux/hrtimer.h>
 #include <linux/frame.h>
-#include <linux/nospec.h>
 #include "kvm_cache_regs.h"
 #include "x86.h"
 
@@ -597,20 +596,6 @@ struct vcpu_vmx {
 	u64 		      arch_capabilities;
 	u64 		      spec_ctrl;
 
-	/*
-	 * This indicates that:
-	 * 1) guest_cpuid_has(X86_FEATURE_IBRS) == true &&
-	 * 2) The guest has actually initiated a write against the MSR.
-	 */
-	bool spec_ctrl_used;
-
-	/*
-	 * This indicates that:
-	 * 1) guest_cpuid_has(X86_FEATURE_IBPB) = true &&
-	 * 2) The guest has initiated a write against the MSR.
-	 */
-	bool pred_cmd_used;
-
 	u32 vm_entry_controls_shadow;
 	u32 vm_exit_controls_shadow;
 	u32 secondary_exec_control;
@@ -917,18 +902,21 @@ static const unsigned short vmcs_field_to_offset_table[] = {
 
 static inline short vmcs_field_to_offset(unsigned long field)
 {
-	const size_t size = ARRAY_SIZE(vmcs_field_to_offset_table);
-	unsigned short offset;
+	BUILD_BUG_ON(ARRAY_SIZE(vmcs_field_to_offset_table) > SHRT_MAX);
 
-	BUILD_BUG_ON(size > SHRT_MAX);
-	if (field >= size)
+	if (field >= ARRAY_SIZE(vmcs_field_to_offset_table))
 		return -ENOENT;
 
-	field = array_index_nospec(field, size);
-	offset = vmcs_field_to_offset_table[field];
-	if (offset == 0)
+	/*
+	 * FIXME: Mitigation for CVE-2017-5753.  To be replaced with a
+	 * generic mechanism.
+	 */
+	asm("lfence");
+
+	if (vmcs_field_to_offset_table[field] == 0)
 		return -ENOENT;
-	return offset;
+
+	return vmcs_field_to_offset_table[field];
 }
 
 static inline struct vmcs12 *get_vmcs12(struct kvm_vcpu *vcpu)
@@ -1925,8 +1913,10 @@ static void update_exception_bitmap(struct kvm_vcpu *vcpu)
 	vmcs_write32(EXCEPTION_BITMAP, eb);
 }
 
-/* Is SPEC_CTRL intercepted for the currently running vCPU? */
-static bool spec_ctrl_intercepted(struct kvm_vcpu *vcpu)
+/*
+ * Check if MSR is intercepted for currently loaded MSR bitmap.
+ */
+static bool msr_write_intercepted(struct kvm_vcpu *vcpu, u32 msr)
 {
 	unsigned long *msr_bitmap;
 	int f = sizeof(unsigned long);
@@ -1934,11 +1924,39 @@ static bool spec_ctrl_intercepted(struct kvm_vcpu *vcpu)
 	if (!cpu_has_vmx_msr_bitmap())
 		return true;
 
-	msr_bitmap = is_guest_mode(vcpu) ?
-			to_vmx(vcpu)->nested.vmcs02.msr_bitmap :
-			to_vmx(vcpu)->vmcs01.msr_bitmap;
+	msr_bitmap = to_vmx(vcpu)->loaded_vmcs->msr_bitmap;
 
-	return !!test_bit(MSR_IA32_SPEC_CTRL, msr_bitmap + 0x800 / f);
+	if (msr <= 0x1fff) {
+		return !!test_bit(msr, msr_bitmap + 0x800 / f);
+	} else if ((msr >= 0xc0000000) && (msr <= 0xc0001fff)) {
+		msr &= 0x1fff;
+		return !!test_bit(msr, msr_bitmap + 0xc00 / f);
+	}
+
+	return true;
+}
+
+/*
+ * Check if MSR is intercepted for L01 MSR bitmap.
+ */
+static bool msr_write_intercepted_l01(struct kvm_vcpu *vcpu, u32 msr)
+{
+	unsigned long *msr_bitmap;
+	int f = sizeof(unsigned long);
+
+	if (!cpu_has_vmx_msr_bitmap())
+		return true;
+
+	msr_bitmap = to_vmx(vcpu)->vmcs01.msr_bitmap;
+
+	if (msr <= 0x1fff) {
+		return !!test_bit(msr, msr_bitmap + 0x800 / f);
+	} else if ((msr >= 0xc0000000) && (msr <= 0xc0001fff)) {
+		msr &= 0x1fff;
+		return !!test_bit(msr, msr_bitmap + 0xc00 / f);
+	}
+
+	return true;
 }
 
 static void clear_atomic_switch_msr_special(struct vcpu_vmx *vmx,
@@ -3397,35 +3415,36 @@ static int vmx_set_msr(struct kvm_vcpu *vcpu, struct msr_data *msr_info)
 		    !guest_cpuid_has(vcpu, X86_FEATURE_SPEC_CTRL))
 			return 1;
 
-		vmx->spec_ctrl_used = true;
-
 		/* The STIBP bit doesn't fault even if it's not advertised */
 		if (data & ~(SPEC_CTRL_IBRS | SPEC_CTRL_STIBP))
 			return 1;
 
 		vmx->spec_ctrl = data;
 
+		if (!data)
+			break;
+
 		/*
+		 * For non-nested:
 		 * When it's written (to non-zero) for the first time, pass
-		 * it through. This means we don't have to take the perf
-		 * hit of saving it on vmexit for the common case of guests
-		 * that don't use it.
+		 * it through.
+		 *
+		 * For nested:
+		 * The handling of the MSR bitmap for L2 guests is done in
+		 * nested_vmx_merge_msr_bitmap. We should not touch the
+		 * vmcs02.msr_bitmap here since it gets completely overwritten
+		 * in the merging. We update the vmcs01 here for L1 as well
+		 * since it will end up touching the MSR anyway now.
 		 */
-		if (cpu_has_vmx_msr_bitmap() && data &&
-		    spec_ctrl_intercepted(vcpu) &&
-		    is_guest_mode(vcpu))
-			vmx_disable_intercept_for_msr(
-					vmx->vmcs01.msr_bitmap,
-					MSR_IA32_SPEC_CTRL,
-					MSR_TYPE_RW);
+		vmx_disable_intercept_for_msr(vmx->vmcs01.msr_bitmap,
+					      MSR_IA32_SPEC_CTRL,
+					      MSR_TYPE_RW);
 		break;
 	case MSR_IA32_PRED_CMD:
 		if (!msr_info->host_initiated &&
 		    !guest_cpuid_has(vcpu, X86_FEATURE_IBPB) &&
 		    !guest_cpuid_has(vcpu, X86_FEATURE_SPEC_CTRL))
 			return 1;
-
-		vmx->pred_cmd_used = true;
 
 		if (data & ~PRED_CMD_IBPB)
 			return 1;
@@ -3435,9 +3454,17 @@ static int vmx_set_msr(struct kvm_vcpu *vcpu, struct msr_data *msr_info)
 
 		wrmsrl(MSR_IA32_PRED_CMD, PRED_CMD_IBPB);
 
-		if (is_guest_mode(vcpu))
-			break;
-
+		/*
+		 * For non-nested:
+		 * When it's written (to non-zero) for the first time, pass
+		 * it through.
+		 *
+		 * For nested:
+		 * The handling of the MSR bitmap for L2 guests is done in
+		 * nested_vmx_merge_msr_bitmap. We should not touch the
+		 * vmcs02.msr_bitmap here since it gets completely overwritten
+		 * in the merging.
+		 */
 		vmx_disable_intercept_for_msr(vmx->vmcs01.msr_bitmap, MSR_IA32_PRED_CMD,
 					      MSR_TYPE_W);
 		break;
@@ -9543,8 +9570,16 @@ static void __noclone vmx_vcpu_run(struct kvm_vcpu *vcpu)
 	 * turn it off. This is much more efficient than blindly adding
 	 * it to the atomic save/restore list. Especially as the former
 	 * (Saving guest MSRs on vmexit) doesn't even exist in KVM.
+	 *
+	 * For non-nested case:
+	 * If the L01 MSR bitmap does not intercept the MSR, then we need to
+	 * save it.
+	 *
+	 * For nested case:
+	 * If the L02 MSR bitmap does not intercept the MSR, then we need to
+	 * save it.
 	 */
-	if (!spec_ctrl_intercepted(vcpu))
+	if (!msr_write_intercepted(vcpu, MSR_IA32_SPEC_CTRL))
 		rdmsrl(MSR_IA32_SPEC_CTRL, vmx->spec_ctrl);
 
 	if (vmx->spec_ctrl)
@@ -10173,10 +10208,24 @@ static inline bool nested_vmx_merge_msr_bitmap(struct kvm_vcpu *vcpu,
 	struct page *page;
 	unsigned long *msr_bitmap_l1;
 	unsigned long *msr_bitmap_l0 = to_vmx(vcpu)->nested.vmcs02.msr_bitmap;
+	/*
+	 * pred_cmd & spec_ctrl are trying to verify two things:
+	 *
+	 * 1. L0 gave a permission to L1 to actually passthrough the MSR. This
+	 *    ensures that we do not accidentally generate an L02 MSR bitmap
+	 *    from the L12 MSR bitmap that is too permissive.
+	 * 2. That L1 or L2s have actually used the MSR. This avoids
+	 *    unnecessarily merging of the bitmap if the MSR is unused. This
+	 *    works properly because we only update the L01 MSR bitmap lazily.
+	 *    So even if L0 should pass L1 these MSRs, the L01 bitmap is only
+	 *    updated to reflect this when L1 (or its L2s) actually write to
+	 *    the MSR.
+	 */
+	bool pred_cmd = msr_write_intercepted_l01(vcpu, MSR_IA32_PRED_CMD);
+	bool spec_ctrl = msr_write_intercepted_l01(vcpu, MSR_IA32_SPEC_CTRL);
 
 	if (!nested_cpu_has_virt_x2apic_mode(vmcs12) &&
-	    !to_vmx(vcpu)->pred_cmd_used &&
-	    !to_vmx(vcpu)->spec_ctrl_used)
+	    !pred_cmd && !spec_ctrl)
 		return false;
 
 	page = kvm_vcpu_gpa_to_page(vcpu, vmcs12->msr_bitmap);
@@ -10210,13 +10259,13 @@ static inline bool nested_vmx_merge_msr_bitmap(struct kvm_vcpu *vcpu,
 		}
 	}
 
-	if (to_vmx(vcpu)->spec_ctrl_used)
+	if (spec_ctrl)
 		nested_vmx_disable_intercept_for_msr(
 					msr_bitmap_l1, msr_bitmap_l0,
 					MSR_IA32_SPEC_CTRL,
 					MSR_TYPE_R | MSR_TYPE_W);
 
-	if (to_vmx(vcpu)->pred_cmd_used)
+	if (pred_cmd)
 		nested_vmx_disable_intercept_for_msr(
 					msr_bitmap_l1, msr_bitmap_l0,
 					MSR_IA32_PRED_CMD,
