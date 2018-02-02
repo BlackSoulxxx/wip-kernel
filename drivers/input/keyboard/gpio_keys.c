@@ -479,9 +479,9 @@ out:
 	return IRQ_HANDLED;
 }
 
-static void gpio_keys_unsuspend_timer(unsigned long _data)
+static void gpio_keys_unsuspend_timer(struct timer_list *t)
 {
-	struct gpio_button_data *bdata = (struct gpio_button_data *)_data;
+	struct gpio_button_data *bdata = from_timer(bdata, t, release_timer);
 
 	bdata->suspended = false;
 }
@@ -516,8 +516,7 @@ static int gpio_keys_setup_key(struct platform_device *pdev,
 	bdata->input = input;
 	bdata->button = button;
 	spin_lock_init(&bdata->lock);
-	setup_timer(&bdata->unsuspend_timer, gpio_keys_unsuspend_timer,
-		    (unsigned long)bdata);
+	timer_setup(&bdata->unsuspend_timer, gpio_keys_unsuspend_timer, 0);
 
 	if (child) {
 		bdata->gpiod = devm_fwnode_get_gpiod_from_child(dev, NULL,
