@@ -1,0 +1,31 @@
+menuconfig LKRG_GUARD
+	bool "Linux Kernel Runtime Guard (LKRG)"
+	default y
+	---help---
+	  This enables the Linux Kernel Runtime Guard (LKRG) support.
+
+	  If in doubt, say N here.
+
+
+if LKRG_GUARD
+
+config LKRG
+	tristate "LKRG kernel module"
+	default m
+	---help---
+	  This enables the Linux Kernel Runtime Guard (LKRG) security module.
+	  Linux Kernel Runtime Guard (LKRG) is a loadable kernel module that
+	  performs runtime integrity checking of the Linux kernel and detection
+	  of security vulnerability exploits against the kernel. As controversial
+	  as this concept is, LKRG attempts to post-detect and hopefully promptly
+	  respond to unauthorized modifications to the running Linux kernel
+	  (integrity checking) or to credentials (such as user IDs) of the running
+	  processes (exploit detection). For process credentials, LKRG attempts to
+	  detect the exploit and take action before the kernel would grant the
+	  process access (such as open a file) based on the unauthorized credentials.
+
+	  To compile this code as a module, chose M here: the module
+	  will be called lkrg.ko
+
+
+endif	# LKRG_GUARD
