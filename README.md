@@ -1,11 +1,18 @@
-# WIP Kernel 4.15
-WIP Patched Kernel Sources (Linux 4.15)
+# WIP Kernel 4.15.*
+WIP Patched Kernel Sources (Linux 4.15.1)
 
 
 ## Full support:
  
  - Indirect Branch Restricted Speculation (IBRS)
  - Indirect Branch Prediction Barrier (IBPB)
+
+
+## Add Linux Kernel Runtime Guard (LKRG)
+
+ Linux Kernel Runtime Guard (LKRG) is a loadable kernel module that
+performs runtime integrity checking of the Linux kernel and detection of
+security vulnerability exploits against the kernel.
 
 
 ## Important security fix:
@@ -20,11 +27,6 @@ Current status of this kernel for the Spectre and Meltdown vulnerabilities
 Spectre and Meltdown mitigation detection tool
 
 Checking for vulnerabilities on current system
-Kernel is Linux 4.15.0-wip-x4-lowlatency #x4-Ubuntu WIP SMP PREEMPT Wed Jan 31 18:20:50 EET 2018 x86_64
-CPU is Intel(R) Core(TM) i7-5950HQ CPU @ 2.90GHz
-Will use vmlinux image /boot/vmlinuz-4.15.0-wip-x4-lowlatency
-Will use kconfig /proc/config.gz (decompressed)
-Will use System.map file /proc/kallsyms
 
 Hardware check
 * Hardware support (CPU microcode) for mitigation techniques
@@ -263,6 +265,58 @@ wireless-power off
 [connection]
 wifi.powersave = 2
 ```
+
+
+## Installation Linux Kernel Runtime Guard (LKRG):
+
+ Installation of LKRG is exactly the same as loading normal kernel
+module. As soon as system is installed it starts the work. If default
+logging level is used, LKRG produces one short sentence saying that
+system is clean unless corruptions are detected.
+```bash
+$ modprobe lkrg
+
+$ modinfo lkrg
+filename:
+/lib/modules/4.15.0-wip-x6-lowlatency/kernel/drivers/staging/lkrg/lkrg.ko
+license:        GPL v2
+description:    pi3's Linux kernel Runtime Guard
+author:         Adam 'pi3' Zabrocki (http://pi3.com.pl)
+srcversion:     03E5505765C0E3DF7525738
+depends:
+staging:        Y
+retpoline:      Y
+intree:         Y
+name:           lkrg
+vermagic:       4.15.0-wip-x6-lowlatency SMP preempt mod_unload
+modversions retpoline
+signat:         PKCS#7
+signer:
+sig_key:
+sig_hashalgo:   md4
+parm:           p_init_log_level:Logging level init value [1 (alive) is
+default] (uint)
+
+ Add file /etc/modprobe.d/lkrg.conf
+
+and insert string options:
+
+options lkrg p_init_log_level=3
+```
+
+ The project has built in a sysctl interface which enables the
+interaction between the administrator and LKRG. By default 5 different
+options are available:
+```bash
+ # sysctl -a|grep lkrg
+ lkrg.block_modules = 0
+ lkrg.clean_message = 1
+ lkrg.force_run = 0
+ lkrg.hide = 0
+ lkrg.log_level = 3
+ lkrg.timestamp = 15
+```
+
 
 ## Fix ATH10k WiFi work
 

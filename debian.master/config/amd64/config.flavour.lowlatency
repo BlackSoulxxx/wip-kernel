@@ -1,6 +1,6 @@
 #
 # Automatically generated file; DO NOT EDIT.
-# Linux/x86 4.15.0-wip-x5 Kernel Configuration
+# Linux/x86 4.15.1-wip-x6 Kernel Configuration
 #
 CONFIG_64BIT=y
 CONFIG_X86_64=y
@@ -7282,6 +7282,8 @@ CONFIG_XEN_ACPI=y
 CONFIG_XEN_SYMS=y
 CONFIG_XEN_HAVE_VPMU=y
 CONFIG_STAGING=y
+CONFIG_LKRG_GUARD=y
+CONFIG_LKRG=m
 CONFIG_IRDA=m
 
 #
