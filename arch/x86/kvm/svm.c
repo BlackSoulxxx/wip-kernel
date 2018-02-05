@@ -185,7 +185,6 @@ struct vcpu_svm {
 	} host;
 
 	u64 spec_ctrl;
-	bool save_spec_ctrl_on_exit;
 
 	u32 *msrpm;
 
@@ -884,6 +883,25 @@ static bool valid_msr_intercept(u32 index)
 			return true;
 
 	return false;
+}
+
+static bool msr_write_intercepted(struct kvm_vcpu *vcpu, unsigned msr)
+{
+	u8 bit_write;
+	unsigned long tmp;
+	u32 offset;
+	u32 *msrpm;
+
+	msrpm = is_guest_mode(vcpu) ? to_svm(vcpu)->nested.msrpm:
+				      to_svm(vcpu)->msrpm;
+
+	offset    = svm_msrpm_offset(msr);
+	bit_write = 2 * (msr & 0x0f) + 1;
+	tmp       = msrpm[offset];
+
+	BUG_ON(offset == MSR_INVALID);
+
+	return !!test_bit(bit_write,  &tmp);
 }
 
 static void set_msr_interception(u32 *msrpm, unsigned msr,
@@ -3720,18 +3738,21 @@ static int svm_set_msr(struct kvm_vcpu *vcpu, struct msr_data *msr)
 
 		svm->spec_ctrl = data;
 
+		if (!data)
+			break;
+
 		/*
+		 * For non-nested:
 		 * When it's written (to non-zero) for the first time, pass
-		 * it through. This means we don't have to take the perf
-		 * hit of saving it on vmexit for the common case of guests
-		 * that don't use it.
+		 * it through.
+		 *
+		 * For nested:
+		 * The handling of the MSR bitmap for L2 guests is done in
+		 * nested_svm_vmrun_msrpm.
+		 * We update the L1 MSR bit as well since it will end up
+		 * touching the MSR anyway now.
 		 */
-		if (data && !svm->save_spec_ctrl_on_exit) {
-			svm->save_spec_ctrl_on_exit = true;
-			if (is_guest_mode(vcpu))
-				break;
-			set_msr_interception(svm->msrpm, MSR_IA32_SPEC_CTRL, 1, 1);
-		}
+		set_msr_interception(svm->msrpm, MSR_IA32_SPEC_CTRL, 1, 1);
 		break;
 	case MSR_IA32_PRED_CMD:
 		if (!msr->host_initiated &&
@@ -5108,8 +5129,16 @@ static void svm_vcpu_run(struct kvm_vcpu *vcpu)
 	 * turn it off. This is much more efficient than blindly adding
 	 * it to the atomic save/restore list. Especially as the former
 	 * (Saving guest MSRs on vmexit) doesn't even exist in KVM.
+	 *
+	 * For non-nested case:
+	 * If the L01 MSR bitmap does not intercept the MSR, then we need to
+	 * save it.
+	 *
+	 * For nested case:
+	 * If the L02 MSR bitmap does not intercept the MSR, then we need to
+	 * save it.
 	 */
-	if (svm->save_spec_ctrl_on_exit)
+	if (!msr_write_intercepted(vcpu, MSR_IA32_SPEC_CTRL))
 		rdmsrl(MSR_IA32_SPEC_CTRL, svm->spec_ctrl);
 
 	if (svm->spec_ctrl)

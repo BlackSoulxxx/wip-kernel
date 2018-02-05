@@ -17,7 +17,7 @@
  */
 #ifndef array_index_mask_nospec
 static inline unsigned long array_index_mask_nospec(unsigned long index,
-		unsigned long size)
+						    unsigned long size)
 {
 	/*
 	 * Warn developers about inappropriate array_index_nospec() usage.
