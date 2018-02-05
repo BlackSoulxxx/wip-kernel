@@ -228,11 +228,6 @@ acpi_ds_init_buffer_field(u16 aml_opcode,
 	/* Entire field must fit within the current length of the buffer */
 
 	if ((bit_offset + bit_count) > (8 * (u32)buffer_desc->buffer.length)) {
-		ACPI_ERROR((AE_INFO,
-			    "Field [%4.4s] at bit offset/length %u/%u "
-			    "exceeds size of target Buffer (%u bits)",
-			    acpi_ut_get_node_name(result_desc), bit_offset,
-			    bit_count, 8 * (u32)buffer_desc->buffer.length));
 		status = AE_AML_BUFFER_LIMIT;
 		goto cleanup;
 	}
