@@ -1308,7 +1308,7 @@ void p_check_integrity(struct work_struct *p_work) {
       p_print_log(P_LKRG_CRIT,
              "ALERT !!! SYSTEM HAS BEEN COMPROMISED - DETECTED DIFFERENT %u CHECKSUMS !!!\n",p_hack_check);
    } else if (p_lkrg_global_ctrl.p_clean_message) {
-      p_print_log(P_LKRG_ALIVE,"Exploit Detection - your system is clean!\n");
+      p_print_log(P_LKRG_ALIVE,"LKRG no detect exploit - your system is clean!\n");
    }
 
    /* God mode off ;) */

@@ -30,7 +30,7 @@ static int __init p_lkrg_register(void) {
    int p_ret = P_LKRG_SUCCESS;
    char p_cpu = 0x0;
 
-   p_print_log(P_LKRG_CRIT, "Loading LKRG...\n");
+   p_print_log(P_LKRG_CRIT, "Loading Kernel Runtime Guard (LKRG) module ...\n");
 
    /*
     * Generate random SipHash key
@@ -131,7 +131,7 @@ static int __init p_lkrg_register(void) {
    mutex_unlock(&module_mutex);
 
    p_print_log(P_LKRG_CRIT,
-          "LKRG initialized successfully!\n");
+          "Kernel Runtime Guard (LKRG) initialized successfully!\n");
 
    return P_LKRG_SUCCESS;
 
@@ -167,7 +167,7 @@ p_main_error:
  */
 static void __exit p_lkrg_deregister(void) {
 
-   p_print_log(P_LKRG_CRIT, "Unloading LKRG...\n");
+   p_print_log(P_LKRG_CRIT, "Unloading LKRG module ...\n");
 
 #ifdef P_LKRG_DEBUG
    p_print_log(P_LKRG_DBG,
@@ -196,7 +196,7 @@ static void __exit p_lkrg_deregister(void) {
    p_offload_cache_delete();
    kzfree(p_db.p_IDT_MSR_CRx_array);
 
-   p_print_log(P_LKRG_CRIT, "LKRG unloaded!\n");
+   p_print_log(P_LKRG_CRIT, "Kernel Runtime Guard (LKRG) module unloaded!\n");
 }
 
 
