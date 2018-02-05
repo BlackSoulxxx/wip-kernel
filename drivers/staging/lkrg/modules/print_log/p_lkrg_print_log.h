@@ -49,7 +49,7 @@
 //#define P_LKRG_IOMMU_HASH_ENABLED
 
 // Signature in logs...
-#define P_LKRG_SIGNATURE "[p_lkrg] "
+#define P_LKRG_SIGNATURE "Exploits GUARD info: "
 
 //#define P_LKRG_PRINT __P_LKRG_CRIT
 
