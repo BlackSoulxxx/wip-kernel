@@ -342,7 +342,7 @@ retpoline_auto:
 	 */
 
 	if (mode != SPECTRE_V2_IBRS_ALL && boot_cpu_has(X86_FEATURE_IBRS)) {
-		setup_force_cpu_cap(X86_FEATURE_USE_IBRS_FW_FW);
+		setup_force_cpu_cap(X86_FEATURE_USE_IBRS_FW);
 		pr_info("Enabling Restricted Speculation for firmware calls\n");
 	}
 }
@@ -376,7 +376,7 @@ ssize_t cpu_show_spectre_v2(struct device *dev,
 
 	return sprintf(buf, "%s%s%s%s\n", spectre_v2_strings[spectre_v2_enabled],
 		       boot_cpu_has(X86_FEATURE_USE_IBPB) ? ", IBPB" : "",
-		       boot_cpu_has(X86_FEATURE_USE_IBRS_FW_FW) ? ", IBRS_FW" : "",
+		       boot_cpu_has(X86_FEATURE_USE_IBRS_FW) ? ", IBRS_FW" : "",
 		       spectre_v2_module_string());
 }
 #endif

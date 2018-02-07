@@ -183,13 +183,13 @@ static inline void indirect_branch_prediction_barrier(void)
 static inline void firmware_restrict_branch_speculation_start(void)
 {
 	alternative_msr_write(MSR_IA32_SPEC_CTRL, SPEC_CTRL_IBRS,
-			      X86_FEATURE_USE_IBRS_FW_FW);
+			      X86_FEATURE_USE_IBRS_FW);
 }
 
 static inline void firmware_restrict_branch_speculation_end(void)
 {
 	alternative_msr_write(MSR_IA32_SPEC_CTRL, 0,
-			      X86_FEATURE_USE_IBRS_FW_FW);
+			      X86_FEATURE_USE_IBRS_FW);
 }
 
 /*
