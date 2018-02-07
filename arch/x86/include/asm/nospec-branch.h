@@ -160,17 +160,36 @@ static inline void vmexit_fill_RSB(void)
 			  ASM_NO_INPUT_CLOBBER(_ASM_BX, "memory"));
 }
 
+#define alternative_msr_write(_msr, _val, _feature)		\
+	asm volatile(ALTERNATIVE("",				\
+				 "movl %[msr], %%ecx\n\t"	\
+				 "movl %[val], %%eax\n\t"	\
+				 "movl $0, %%edx\n\t"		\
+				 "wrmsr",			\
+				 _feature)			\
+		     : : [msr] "i" (_msr), [val] "i" (_val)	\
+		     : "eax", "ecx", "edx", "memory")
+
 static inline void indirect_branch_prediction_barrier(void)
 {
-	asm volatile(ALTERNATIVE("",
-				 "movl %[msr], %%ecx\n\t"
-				 "movl %[val], %%eax\n\t"
-				 "movl $0, %%edx\n\t"
-				 "wrmsr",
-				 X86_FEATURE_USE_IBPB)
-		     : : [msr] "i" (MSR_IA32_PRED_CMD),
-			 [val] "i" (PRED_CMD_IBPB)
-		     : "eax", "ecx", "edx", "memory");
+	alternative_msr_write(MSR_IA32_PRED_CMD, PRED_CMD_IBPB,
+			      X86_FEATURE_USE_IBPB);
+}
+
+/*
+ * With retpoline, we must use IBRS to restrict branch prediction
+ * before calling into firmware.
+ */
+static inline void firmware_restrict_branch_speculation_start(void)
+{
+	alternative_msr_write(MSR_IA32_SPEC_CTRL, SPEC_CTRL_IBRS,
+			      X86_FEATURE_USE_IBRS_FW_FW);
+}
+
+static inline void firmware_restrict_branch_speculation_end(void)
+{
+	alternative_msr_write(MSR_IA32_SPEC_CTRL, 0,
+			      X86_FEATURE_USE_IBRS_FW_FW);
 }
 
 /*
@@ -186,7 +205,7 @@ static inline void restrict_branch_speculation(void)
 				 "movl %[val], %%eax\n\t"
 				 "movl $0, %%edx\n\t"
 				 "wrmsr",
-				 X86_FEATURE_USE_IBRS)
+				 X86_FEATURE_USE_IBRS_FW)
 		     : "=a" (ax), "=c" (cx), "=d" (dx)
 		     : [msr] "i" (MSR_IA32_SPEC_CTRL),
 		       [val] "i" (SPEC_CTRL_IBRS)
@@ -202,7 +221,7 @@ static inline void unrestrict_branch_speculation(void)
 				 "movl %[val], %%eax\n\t"
 				 "movl $0, %%edx\n\t"
 				 "wrmsr",
-				 X86_FEATURE_USE_IBRS)
+				 X86_FEATURE_USE_IBRS_FW)
 		     : "=a" (ax), "=c" (cx), "=d" (dx)
 		     : [msr] "i" (MSR_IA32_SPEC_CTRL),
 		       [val] "i" (0)
@@ -218,7 +237,7 @@ static inline u64 save_and_restrict_branch_speculation(void)
 	asm volatile(ALTERNATIVE("",
 				 "movl %[msr], %%ecx\n\t"
 				 "rdmsr\n\t",
-				 X86_FEATURE_USE_IBRS)
+				 X86_FEATURE_USE_IBRS_FW)
 		     : "=a" (ax), "=c" (cx), "=d" (dx)
 		     : [msr] "i" (MSR_IA32_SPEC_CTRL)
 		     : "memory");
@@ -231,7 +250,7 @@ static inline u64 save_and_restrict_branch_speculation(void)
 				 "movl %[val], %%eax\n\t"
 				 "movl $0, %%edx\n\t"
 				 "wrmsr",
-				 X86_FEATURE_USE_IBRS)
+				 X86_FEATURE_USE_IBRS_FW)
 		     : "=a" (ax), "=c" (cx), "=d" (dx)
 		     : [msr] "i" (MSR_IA32_SPEC_CTRL),
 		       [val] "i" (SPEC_CTRL_IBRS)
@@ -247,7 +266,7 @@ static inline void restore_branch_speculation(u64 val)
 	asm volatile(ALTERNATIVE("",
 				 "movl %[msr], %%ecx\n\t"
 				 "wrmsr",
-				 X86_FEATURE_USE_IBRS)
+				 X86_FEATURE_USE_IBRS_FW)
 		     : "=a" (ax), "=c" (cx), "=d" (dx)
 		     : [msr] "i" (MSR_IA32_SPEC_CTRL),
 		       [val_low] "a" (val & 0xffffffff),

@@ -256,7 +256,7 @@ static void __init spectre_v2_select_mitigation(void)
 
 	case SPECTRE_V2_CMD_IBRS:
 		mode = SPECTRE_V2_IBRS;
-		setup_force_cpu_cap(X86_FEATURE_USE_IBRS);
+		setup_force_cpu_cap(X86_FEATURE_USE_IBRS_FW);
 		goto enabled;
 
 	case SPECTRE_V2_CMD_AUTO:
@@ -268,7 +268,7 @@ static void __init spectre_v2_select_mitigation(void)
 		if (boot_cpu_has(X86_FEATURE_IBRS) &&
 		    (is_skylake_era() || !retp_compiler())) {
 			mode = SPECTRE_V2_IBRS;
-			setup_force_cpu_cap(X86_FEATURE_USE_IBRS);
+			setup_force_cpu_cap(X86_FEATURE_USE_IBRS_FW);
 			goto enabled;
 		}
 		/* fall through */
@@ -315,7 +315,7 @@ retpoline_auto:
 	 * switch is required.
 	 */
 	if ((!boot_cpu_has(X86_FEATURE_PTI) && !boot_cpu_has(X86_FEATURE_SMEP)) ||
-	    (!boot_cpu_has(X86_FEATURE_USE_IBRS) && is_skylake_era())) {
+	    (!boot_cpu_has(X86_FEATURE_USE_IBRS_FW) && is_skylake_era())) {
 		setup_force_cpu_cap(X86_FEATURE_RSB_CTXSW);
 		pr_info("Filling RSB on context switch\n");
 	}
@@ -324,6 +324,15 @@ retpoline_auto:
 	if (boot_cpu_has(X86_FEATURE_IBPB)) {
 		setup_force_cpu_cap(X86_FEATURE_USE_IBPB);
 		pr_info("Enabling Indirect Branch Prediction Barrier\n");
+	}
+
+	/*
+	 * Retpoline means the kernel is safe because it has no indirect
+	 * branches. But firmware isn't, so use IBRS to protect that.
+	 */
+	if (boot_cpu_has(X86_FEATURE_IBRS)) {
+		setup_force_cpu_cap(X86_FEATURE_USE_IBRS_FW_FW);
+		pr_info("Enabling Restricted Speculation for firmware calls\n");
 	}
 }
 
@@ -354,8 +363,9 @@ ssize_t cpu_show_spectre_v2(struct device *dev,
 	if (!boot_cpu_has_bug(X86_BUG_SPECTRE_V2))
 		return sprintf(buf, "Not affected\n");
 
-	return sprintf(buf, "%s%s%s\n", spectre_v2_strings[spectre_v2_enabled],
+	return sprintf(buf, "%s%s%s%s\n", spectre_v2_strings[spectre_v2_enabled],
 		       boot_cpu_has(X86_FEATURE_USE_IBPB) ? ", IBPB" : "",
+		       boot_cpu_has(X86_FEATURE_USE_IBRS_FW_FW) ? ", IBRS_FW" : "",
 		       spectre_v2_module_string());
 }
 #endif
