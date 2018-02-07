@@ -80,7 +80,7 @@ enum spectre_v2_mitigation_cmd {
 	SPECTRE_V2_CMD_RETPOLINE,
 	SPECTRE_V2_CMD_RETPOLINE_GENERIC,
 	SPECTRE_V2_CMD_RETPOLINE_AMD,
-	SPECTRE_V2_CMD_IBRS,
+	SPECTRE_V2_CMD_IBRS_ALL,
 };
 
 static const char *spectre_v2_strings[] = {
@@ -89,7 +89,7 @@ static const char *spectre_v2_strings[] = {
 	[SPECTRE_V2_RETPOLINE_MINIMAL_AMD]	= "Vulnerable: Minimal AMD ASM retpoline",
 	[SPECTRE_V2_RETPOLINE_GENERIC]		= "Mitigation: Full generic retpoline",
 	[SPECTRE_V2_RETPOLINE_AMD]		= "Mitigation: Full AMD retpoline",
-	[SPECTRE_V2_IBRS]			= "Mitigation: Indirect Branch Restricted Speculation",
+	[SPECTRE_V2_IBRS_ALL]			= "Mitigation: Enhanced IBRS",
 };
 
 #undef pr_fmt
@@ -152,7 +152,7 @@ static const struct {
 	{ "retpoline",         SPECTRE_V2_CMD_RETPOLINE,         false },
 	{ "retpoline,amd",     SPECTRE_V2_CMD_RETPOLINE_AMD,     false },
 	{ "retpoline,generic", SPECTRE_V2_CMD_RETPOLINE_GENERIC, false },
-	{ "ibrs",              SPECTRE_V2_CMD_IBRS,              false },
+	{ "ibrs",              SPECTRE_V2_CMD_IBRS_ALL,              false },
 	{ "auto",              SPECTRE_V2_CMD_AUTO,              false },
 };
 
@@ -254,12 +254,22 @@ static void __init spectre_v2_select_mitigation(void)
 			goto retpoline_generic;
 		break;
 
-	case SPECTRE_V2_CMD_IBRS:
-		mode = SPECTRE_V2_IBRS;
+	case SPECTRE_V2_CMD_IBRS_ALL:
+		mode = SPECTRE_V2_IBRS_ALL;
 		setup_force_cpu_cap(X86_FEATURE_USE_IBRS_FW);
 		goto enabled;
 
 	case SPECTRE_V2_CMD_AUTO:
+		if (boot_cpu_has(X86_FEATURE_ARCH_CAPABILITIES)) {
+			u64 ia32_cap = 0;
+
+			rdmsrl(MSR_IA32_ARCH_CAPABILITIES, ia32_cap);
+			if (ia32_cap & ARCH_CAP_IBRS_ALL) {
+				mode = SPECTRE_V2_IBRS_ALL;
+				goto enabled;
+			}
+		}
+
 	case SPECTRE_V2_CMD_FORCE:
 		/*
 		 * If we have IBRS support, and either Skylake or !RETPOLINE,
@@ -267,7 +277,7 @@ static void __init spectre_v2_select_mitigation(void)
 		 */
 		if (boot_cpu_has(X86_FEATURE_IBRS) &&
 		    (is_skylake_era() || !retp_compiler())) {
-			mode = SPECTRE_V2_IBRS;
+			mode = SPECTRE_V2_IBRS_ALL;
 			setup_force_cpu_cap(X86_FEATURE_USE_IBRS_FW);
 			goto enabled;
 		}
@@ -330,7 +340,8 @@ retpoline_auto:
 	 * Retpoline means the kernel is safe because it has no indirect
 	 * branches. But firmware isn't, so use IBRS to protect that.
 	 */
-	if (boot_cpu_has(X86_FEATURE_IBRS)) {
+
+	if (mode != SPECTRE_V2_IBRS_ALL && boot_cpu_has(X86_FEATURE_IBRS)) {
 		setup_force_cpu_cap(X86_FEATURE_USE_IBRS_FW_FW);
 		pr_info("Enabling Restricted Speculation for firmware calls\n");
 	}
