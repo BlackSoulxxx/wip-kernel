@@ -38,8 +38,8 @@
 extern asmlinkage unsigned long efi_call_phys(void *, ...);
 
 #define arch_efi_call_virt_setup()			\
-	kernel_fpu_begin()				\
-	firmware_restrict_branch_speculation_start();
+	kernel_fpu_begin();				\
+	firmware_restrict_branch_speculation_start()
 
 #define arch_efi_call_virt_teardown()				\
 	firmware_restrict_branch_speculation_end();		\
