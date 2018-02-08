@@ -64,7 +64,7 @@ CVE-2017-5753 [bounds check bypass] aka 'Spectre Variant 1'
   YES  (1 occurence(s) found of 64 bits array_index_mask_nospec())
 * Checking count of LFENCE instructions following a jump in kernel:
   YES  (1839 jump-then-lfence instructions found, which is >= 30 (heuristic))
-> STATUS:  NOT VULNERABLE  (Mitigation: __user pointer sanitization)
+#### STATUS:  NOT VULNERABLE  (Mitigation: __user pointer sanitization)
 
 CVE-2017-5715 [branch target injection] aka 'Spectre Variant 2'
 * Mitigated according to the /sys interface:
@@ -80,7 +80,7 @@ CVE-2017-5715 [branch target injection] aka 'Spectre Variant 2'
   * Kernel compiled with a retpoline-aware compiler:
   YES  (kernel reports full retpoline compilation)
   * Retpoline enabled:  YES
-> STATUS:  NOT VULNERABLE  (Mitigation: Full generic retpoline, IBPB, IBRS_FW)
+#### STATUS:  NOT VULNERABLE  (Mitigation: Full generic retpoline, IBPB, IBRS_FW)
 
 CVE-2017-5754 [rogue data cache load] aka 'Meltdown' aka 'Variant 3'
 * Mitigated according to the /sys interface:
@@ -93,7 +93,7 @@ CVE-2017-5754 [rogue data cache load] aka 'Meltdown' aka 'Variant 3'
   * CPU supports INVPCID:
   YES  (performance degradation with PTI will be limited)
 * Running as a Xen PV DomU:  NO
-> STATUS:  NOT VULNERABLE  (Mitigation: PTI)
+#### STATUS:  NOT VULNERABLE  (Mitigation: PTI)
 
 
 
