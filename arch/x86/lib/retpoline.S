@@ -48,6 +48,21 @@ GENERATE_THUNK(r12)
 GENERATE_THUNK(r13)
 GENERATE_THUNK(r14)
 GENERATE_THUNK(r15)
+#else
+/* Clang uses this on 32-bit */
+ENTRY(__x86_indirect_thunk)
+	CFI_STARTPROC
+	ALTERNATIVE "ret", "call .Ldo_rop", X86_FEATURE_RETPOLINE
+.Lspec_trap:
+	pause
+	lfence
+	jmp	.Lspec_trap
+.Ldo_rop:
+	addl	$4, %esp
+	ret
+	CFI_ENDPROC
+ENDPROC(__x86_indirect_thunk)
+__EXPORT_THUNK(__x86_indirect_thunk)
 #endif
 
 #endif /* CONFIG_RETPOLINE */
