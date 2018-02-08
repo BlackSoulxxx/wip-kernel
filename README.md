@@ -18,7 +18,7 @@ security vulnerability exploits against the kernel.
 ## Important security fix:
 
 
-#### Recommended built on the latest GCC 7.3
+#### Recommended built on the latest GCC 7.3+
 
 
 Current status of this kernel for the Spectre and Meltdown vulnerabilities
@@ -55,7 +55,7 @@ the mitigations for Spectre), or upgrade to a newer one if available.
 * CPU vulnerability to the three speculative execution attacks variants
   * Vulnerable to Variant 1:  YES (Enable Mitigation: __user pointer sanitization)
   * Vulnerable to Variant 2:  YES (Enable Mitigation: PTI)
-  * Vulnerable to Variant 3:  YES (Enable Mitigation: Full generic retpoline, IBPB)
+  * Vulnerable to Variant 3:  YES (Enable Mitigation: Full generic retpoline, IBPB, IBRS_FW)
 
 CVE-2017-5753 [bounds check bypass] aka 'Spectre Variant 1'
 * Mitigated according to the /sys interface:
@@ -80,7 +80,7 @@ CVE-2017-5715 [branch target injection] aka 'Spectre Variant 2'
   * Kernel compiled with a retpoline-aware compiler:
   YES  (kernel reports full retpoline compilation)
   * Retpoline enabled:  YES
-> STATUS:  NOT VULNERABLE  (Mitigation: Full generic retpoline, IBPB)
+> STATUS:  NOT VULNERABLE  (Mitigation: Full generic retpoline, IBPB, IBRS_FW)
 
 CVE-2017-5754 [rogue data cache load] aka 'Meltdown' aka 'Variant 3'
 * Mitigated according to the /sys interface:
@@ -277,25 +277,23 @@ system is clean unless corruptions are detected.
 $ modprobe lkrg
 
 $ modinfo lkrg
-filename:
-/lib/modules/4.15.0-wip-x6-lowlatency/kernel/drivers/staging/lkrg/lkrg.ko
+filename:       /lib/modules/4.15.1-wip-x8-generic/kernel/drivers/staging/lkrg/lkrg.ko
 license:        GPL v2
 description:    pi3's Linux kernel Runtime Guard
 author:         Adam 'pi3' Zabrocki (http://pi3.com.pl)
-srcversion:     03E5505765C0E3DF7525738
+srcversion:     4C1148B59AD4E48C52909D2
 depends:
 staging:        Y
 retpoline:      Y
 intree:         Y
 name:           lkrg
-vermagic:       4.15.0-wip-x6-lowlatency SMP preempt mod_unload
-modversions retpoline
+vermagic:       4.15.1-wip-x8-generic SMP mod_unload modversions retpoline
 signat:         PKCS#7
 signer:
 sig_key:
 sig_hashalgo:   md4
-parm:           p_init_log_level:Logging level init value [1 (alive) is
-default] (uint)
+parm:           p_init_log_level:Logging level init value [1 (alive) is default] (uint)
+
 
  Add file /etc/modprobe.d/lkrg.conf
 
