@@ -1,8 +1,8 @@
 # SPDX-License-Identifier: GPL-2.0
 VERSION = 4
 PATCHLEVEL = 15
-SUBLEVEL = 1
-EXTRAVERSION = -wip-x8
+SUBLEVEL = 2
+EXTRAVERSION = -wip-x9
 NAME = Supercritical Solace
 
 # *DOCUMENTATION*
