@@ -1,5 +1,5 @@
 # WIP Kernel 4.15.*
-WIP Patched Kernel Sources (Linux 4.15.1)
+WIP Patched Kernel Sources (Linux 4.15.2)
 
 
 ## Full support:
@@ -47,10 +47,6 @@ Hardware check
   * CPU microcode is known to cause stability problems:
   YES  (model 71 stepping 1 ucode 0x1b)
 
-The microcode your CPU is running on is known to cause instability problems,
-such as intempestive reboots or random crashes.
-You are advised to either revert to a previous microcode version (that might not have
-the mitigations for Spectre), or upgrade to a newer one if available.
 
 * CPU vulnerability to the three speculative execution attacks variants
   * Vulnerable to Variant 1:  YES (Enable Mitigation: __user pointer sanitization)
@@ -114,13 +110,14 @@ DRM Optimized Performance.
 BBR TCP Congestion Control.
 Intel CPUFreq (P-State passive mode).
 ZFS, AUFS, BFQ and Ureadahead support available.
+Linux Kernel Runtime Guard (LKRG)
 ```
 
 ### Kernel config file
 
 ```bash
  Kernel config file locate to directory
- debian.master/config/amd64/config.flavour.lowlatency
+ debian.master/config/amd64/config.flavour.generic
 ```
 
 ## Download and install kernel from my build (DEB packages):
@@ -277,17 +274,17 @@ system is clean unless corruptions are detected.
 $ modprobe lkrg
 
 $ modinfo lkrg
-filename:       /lib/modules/4.15.1-wip-x8-generic/kernel/drivers/staging/lkrg/lkrg.ko
+filename:       /lib/modules/4.15.2-wip-x10-generic/kernel/drivers/staging/lkrg/lkrg.ko
 license:        GPL v2
 description:    pi3's Linux kernel Runtime Guard
 author:         Adam 'pi3' Zabrocki (http://pi3.com.pl)
-srcversion:     4C1148B59AD4E48C52909D2
+srcversion:     6B5607A2B401BD5ED1E12EB
 depends:
 staging:        Y
 retpoline:      Y
 intree:         Y
 name:           lkrg
-vermagic:       4.15.1-wip-x8-generic SMP mod_unload modversions retpoline
+vermagic:       4.15.2-wip-x10-generic SMP mod_unload modversions retpoline
 signat:         PKCS#7
 signer:
 sig_key:
