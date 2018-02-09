@@ -54,7 +54,6 @@ ENTRY(__x86_indirect_thunk)
 	CFI_STARTPROC
 	ALTERNATIVE "ret", "call .Ldo_rop", X86_FEATURE_RETPOLINE
 .Lspec_trap:
-	pause
 	lfence
 	jmp	.Lspec_trap
 .Ldo_rop:
@@ -89,14 +88,12 @@ __EXPORT_THUNK(__x86_indirect_thunk)
 771:
 	call	772f
 773:						/* speculation trap */
-	pause
 	lfence
 	jmp	773b
 	.align 16
 772:
 	call	774f
 775:						/* speculation trap */
-	pause
 	lfence
 	jmp	775b
 	.align 16
