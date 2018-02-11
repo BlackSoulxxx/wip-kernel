@@ -320,11 +320,13 @@ Add to /etc/modprobe.d file ath10k_core.conf and add string:
 
  options ath10k_core skip_otp=y
 
-Copy firmware files:
+Create a symbolic link from firmware files:
 
-copy /lib/firmware/ath10k/QCA6174/board.bin --> /lib/firmware/ath10k/pre-cal-pci-0000:05:000.bin
+Example for (Qualcomm Atheros QCA6174 802.11ac Wireless Network Adapter)
 
-copy /lib/firmware/ath10k/QCA6174/board-2.bin --> /lib/firmware/ath10k/cal-pci-0000:05:000.bin
+ln -s /lib/firmware/ath10k/QCA6174/hw2.1/board.bin /lib/firmware/ath10k/pre-cal-pci-0000:05:00.0.bin
+
+ln -s /lib/firmware/ath10k/QCA6174/hw2.1/board-2.bin /lib/firmware/ath10k/cal-pci-0000:05:00.0.bin
 ```
 
 
