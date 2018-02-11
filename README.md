@@ -1,6 +1,15 @@
 # WIP Kernel 4.15.*
 WIP Patched Kernel Sources (Linux 4.15.2)
 
+ - Full kernel adaptation to version Ubuntu 18.04 LTS Bionic.
+
+ - Full kernel adaptation to build GCC7/GCC8.
+
+#### Warning!
+
+Recommended built on the latest GCC 7.3+.
+The kernel compiled by GCC8 has a temporary problem in the LKRG module.
+
 
 ## Full support:
  
@@ -16,10 +25,6 @@ security vulnerability exploits against the kernel.
 
 
 ## Important security fix:
-
-
-#### Recommended built on the latest GCC 7.3+
-
 
 Current status of this kernel for the Spectre and Meltdown vulnerabilities
 --------------------------------------------------------------------------
