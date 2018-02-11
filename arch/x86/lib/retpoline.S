@@ -49,16 +49,31 @@ GENERATE_THUNK(r13)
 GENERATE_THUNK(r14)
 GENERATE_THUNK(r15)
 #else
-/* Clang uses this on 32-bit */
+
+/*
+ * Clang uses this on 32-bit. It does *not* match the GCC one which
+ * is equivalent to a 'ret'. Instead it takes the target address
+ * followed by a return address, both on the stack. The name will
+ * change back to being LLVM-specific.
+ */
 ENTRY(__x86_indirect_thunk)
 	CFI_STARTPROC
-	ALTERNATIVE "ret", "call .Ldo_rop", X86_FEATURE_RETPOLINE
-.Lspec_trap:
+	calll	.Lpush_call_target
+.Lpush_capture_spec:
+	pause
 	lfence
-	jmp	.Lspec_trap
-.Ldo_rop:
-	addl	$4, %esp
-	ret
+	jmp	.Lpush_capture_spec
+
+	.align	16
+
+.Lpush_call_target:
+	addl	$4,%esp	# Clear pause_loop return address.
+	# Top of stack words are: Callee, RA. Exchange Callee and RA.
+	pushl	4(%esp)	# Push callee
+	pushl	4(%esp)	# Push RA
+	popl	8(%esp)	# Pop RA to final RA
+	popl	(%esp)	# Pop callee to next top of stack
+	retl		# Ret to callee
 	CFI_ENDPROC
 ENDPROC(__x86_indirect_thunk)
 __EXPORT_THUNK(__x86_indirect_thunk)
