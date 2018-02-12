@@ -69,6 +69,8 @@ static const struct x86_cpu_id vmx_cpu_id[] = {
 };
 MODULE_DEVICE_TABLE(x86cpu, vmx_cpu_id);
 
+enum spectre_v2_mitigation spectre_v2_enabled = SPECTRE_V2_NONE;
+
 static bool __read_mostly enable_vpid = 1;
 module_param_named(vpid, enable_vpid, bool, 0444);
 
