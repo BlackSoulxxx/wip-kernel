@@ -7,7 +7,7 @@
 #ifndef _ASM_X86_MACH_DEFAULT_APM_H
 #define _ASM_X86_MACH_DEFAULT_APM_H
 
-#include <asm/spec_ctrl.h>
+#include <asm/nospec-branch.h>
 
 #ifdef APM_ZERO_SEGS
 #	define APM_DO_ZERO_SEGS \
