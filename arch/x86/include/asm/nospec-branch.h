@@ -143,6 +143,13 @@ enum spectre_v2_mitigation {
 	SPECTRE_V2_IBRS_ALL,
 };
 
+extern enum spectre_v2_mitigation spectre_v2_enabled;
+
+static inline bool spectre_v2_ibrs_all(void)
+{
+	return spectre_v2_enabled == SPECTRE_V2_IBRS_ALL;
+}
+
 extern char __indirect_thunk_start[];
 extern char __indirect_thunk_end[];
 

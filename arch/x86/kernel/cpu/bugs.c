@@ -94,7 +94,7 @@ static const char *spectre_v2_strings[] = {
 #undef pr_fmt
 #define pr_fmt(fmt)     "Spectre V2 : " fmt
 
-static enum spectre_v2_mitigation spectre_v2_enabled = SPECTRE_V2_NONE;
+enum spectre_v2_mitigation spectre_v2_enabled = SPECTRE_V2_NONE;
 
 #ifdef RETPOLINE
 static bool spectre_v2_bad_module;
@@ -244,6 +244,7 @@ static void __init spectre_v2_select_mitigation(void)
 			rdmsrl(MSR_IA32_ARCH_CAPABILITIES, ia32_cap);
 			if (ia32_cap & ARCH_CAP_IBRS_ALL) {
 				mode = SPECTRE_V2_IBRS_ALL;
+				wrmsrl(MSR_IA32_SPEC_CTRL, SPEC_CTRL_IBRS);
 				goto ibrs_all;
 			}
 		}

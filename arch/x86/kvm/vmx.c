@@ -3419,13 +3419,14 @@ static int vmx_set_msr(struct kvm_vcpu *vcpu, struct msr_data *msr_info)
 
 		vmx->spec_ctrl = data;
 
-		if (!data)
+		if (!data && !spectre_v2_ibrs_all())
 			break;
 
 		/*
 		 * For non-nested:
 		 * When it's written (to non-zero) for the first time, pass
-		 * it through.
+		 * it through unless we have IBRS_ALL and it should just be
+		 * set for ever.
 		 *
 		 * For nested:
 		 * The handling of the MSR bitmap for L2 guests is done in
@@ -9441,7 +9442,8 @@ static void __noclone vmx_vcpu_run(struct kvm_vcpu *vcpu)
 	 * is no need to worry about the conditional branch over the wrmsr
 	 * being speculatively taken.
 	 */
-	if (vmx->spec_ctrl)
+
+	if (!spectre_v2_ibrs_all() && vmx->spec_ctrl)
 		wrmsrl(MSR_IA32_SPEC_CTRL, vmx->spec_ctrl);
 
 	vmx->__launched = vmx->loaded_vmcs->launched;
@@ -9563,11 +9565,12 @@ static void __noclone vmx_vcpu_run(struct kvm_vcpu *vcpu)
 	      );
 
 	/*
-	 * We do not use IBRS in the kernel. If this vCPU has used the
-	 * SPEC_CTRL MSR it may have left it on; save the value and
-	 * turn it off. This is much more efficient than blindly adding
-	 * it to the atomic save/restore list. Especially as the former
-	 * (Saving guest MSRs on vmexit) doesn't even exist in KVM.
+	 * Without IBRS_ALL, we do not use IBRS in the kernel. If this
+	 * vCPU has used the SPEC_CTRL MSR it may have left it on;
+	 * save the value and turn it off. This is much more efficient
+	 * than blindly adding it to the atomic save/restore list.
+	 * Especially as the former (saving guest MSRs on vmexit)
+	 * doesn't even exist in KVM.
 	 *
 	 * For non-nested case:
 	 * If the L01 MSR bitmap does not intercept the MSR, then we need to
@@ -9576,12 +9579,17 @@ static void __noclone vmx_vcpu_run(struct kvm_vcpu *vcpu)
 	 * For nested case:
 	 * If the L02 MSR bitmap does not intercept the MSR, then we need to
 	 * save it.
+	 *
+	 * If IBRS_ALL is present then the whole thing is a no-op fiction
+	 * for guests and every access is trapped, so do nothing.
 	 */
-	if (!msr_write_intercepted(vcpu, MSR_IA32_SPEC_CTRL))
-		rdmsrl(MSR_IA32_SPEC_CTRL, vmx->spec_ctrl);
+	if (!spectre_v2_ibrs_all()) {
+		if (!msr_write_intercepted(vcpu, MSR_IA32_SPEC_CTRL))
+			rdmsrl(MSR_IA32_SPEC_CTRL, vmx->spec_ctrl);
 
-	if (vmx->spec_ctrl)
-		wrmsrl(MSR_IA32_SPEC_CTRL, 0);
+		if (vmx->spec_ctrl)
+			wrmsrl(MSR_IA32_SPEC_CTRL, 0);
+	}
 
 	/* Eliminate branch target predictions from guest mode */
 	vmexit_fill_RSB();
