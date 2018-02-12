@@ -17,7 +17,7 @@ struct lockdep_map;
 extern int prove_locking;
 extern int lock_stat;
 
-#define MAX_LOCKDEP_SUBCLASSES		8UL
+#define MAX_LOCKDEP_SUBCLASSES		(8UL + 4)
 
 #include <linux/types.h>
 
@@ -208,7 +208,7 @@ struct lock_chain {
 	u64				chain_key;
 };
 
-#define MAX_LOCKDEP_KEYS_BITS		13
+#define MAX_LOCKDEP_KEYS_BITS		(13 + 3)
 /*
  * Subtract one because we offset hlock->class_idx by 1 in order
  * to make 0 mean no class. This avoids overflowing the class_idx
