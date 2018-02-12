@@ -1,15 +1,9 @@
 # WIP Kernel 4.15.*
-WIP Patched Kernel Sources (Linux 4.15.2)
+WIP Patched Kernel Sources (Linux 4.15.3)
 
  - Full kernel adaptation to version Ubuntu 18.04 LTS Bionic.
 
  - Full kernel adaptation to build GCC7/GCC8.
-
-#### Warning!
-
-Recommended built on the latest GCC 7.3+.
-The kernel compiled by GCC8 has a temporary problem in the LKRG module.
-
 
 ## Full support:
  
@@ -110,7 +104,7 @@ Tuned CPU for Intel i5/i7/Atom platform.
 PDS CPU Scheduler & Multi-Queue I/O Block Layer w/ BFQ-MQ for smoothness and responsiveness.
 Caching, Virtual Memory Manager and CPU Governor Improvements.
 General-purpose Multitasking Kernel.
-Built on the latest GCC 7.3
+Built on the latest GCC 7.3 or (GCC 8)
 DRM Optimized Performance.
 BBR TCP Congestion Control.
 Intel CPUFreq (P-State passive mode).
@@ -279,7 +273,7 @@ system is clean unless corruptions are detected.
 $ modprobe lkrg
 
 $ modinfo lkrg
-filename:       /lib/modules/4.15.2-wip-x10-generic/kernel/drivers/staging/lkrg/lkrg.ko
+filename:       /lib/modules/4.15.3-wip-x12-generic/kernel/drivers/staging/lkrg/lkrg.ko
 license:        GPL v2
 description:    pi3's Linux kernel Runtime Guard
 author:         Adam 'pi3' Zabrocki (http://pi3.com.pl)
@@ -289,7 +283,7 @@ staging:        Y
 retpoline:      Y
 intree:         Y
 name:           lkrg
-vermagic:       4.15.2-wip-x10-generic SMP mod_unload modversions retpoline
+vermagic:       4.15.3-wip-x12-generic SMP mod_unload modversions retpoline
 signat:         PKCS#7
 signer:
 sig_key:
