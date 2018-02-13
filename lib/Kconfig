@@ -11,7 +11,7 @@ config RAID6_PQ
 	tristate
 
 config RAID6_USE_PREFER_GEN
-	boolean "Use prefered raid6 gen function."
+	bool "Use prefered raid6 gen function."
 	default n
 	depends on RAID6_PQ
 	help
