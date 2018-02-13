@@ -1145,6 +1145,7 @@ idtentry machine_check		do_mce			has_error_code=0	paranoid=1
  * Return: ebx=0: need swapgs on exit, ebx=1: otherwise
  */
 ENTRY(paranoid_entry)
+	UNWIND_HINT_FUNC
 	cld
 	movl	$1, %ebx
 	movl	$MSR_GS_BASE, %ecx
@@ -1160,7 +1161,7 @@ ENTRY(paranoid_entry)
 	RESTRICT_IB_SPEC_SAVE_AND_CLOBBER save_reg=%r13d
 
 	ret
-ENDPROC(paranoid_entry)
+END(paranoid_entry)
 
 /*
  * "Paranoid" exit path from exception stack.  This is invoked
