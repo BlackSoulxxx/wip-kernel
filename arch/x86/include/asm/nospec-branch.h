@@ -205,8 +205,6 @@ static inline bool spectre_v2_ibrs_all(void)
 extern char __indirect_thunk_start[];
 extern char __indirect_thunk_end[];
 
-DECLARE_PER_CPU(int, spec_ctrl_ibrs_fw_depth);
-
 /*
  * On VMEXIT we must ensure that no RSB predictions learned in the guest
  * can be followed in the host, by overwriting the RSB completely. Both
@@ -260,105 +258,6 @@ static inline void firmware_restrict_branch_speculation_end(void)
 	alternative_msr_write(MSR_IA32_SPEC_CTRL, 0,
 			      X86_FEATURE_USE_IBRS_FW);
 	preempt_enable();
-
-/*
- * With retpoline, we must use IBRS to restrict branch prediction
- * before calling into firmware.
- */
-static inline void firmware_restrict_branch_speculation_start(void)
-{
-	if (this_cpu_inc_return(spec_ctrl_ibrs_fw_depth) == 1)
-		alternative_msr_write(MSR_IA32_SPEC_CTRL, SPEC_CTRL_IBRS,
-			      X86_FEATURE_USE_IBRS_FW);
-}
-
-static inline void firmware_restrict_branch_speculation_end(void)
-{
-	if (this_cpu_dec_return(spec_ctrl_ibrs_fw_depth) == 0)
-		alternative_msr_write(MSR_IA32_SPEC_CTRL, 0,
-				      X86_FEATURE_USE_IBRS_FW);
-}
-
-/*
- * This also performs a barrier, and setting it again when it was already
- * set is NOT a no-op.
- */
-static inline void restrict_branch_speculation(void)
-{
-	unsigned long ax, cx, dx;
-
-	asm volatile(ALTERNATIVE("",
-				 "movl %[msr], %%ecx\n\t"
-				 "movl %[val], %%eax\n\t"
-				 "movl $0, %%edx\n\t"
-				 "wrmsr",
-				 X86_FEATURE_USE_IBRS_FW)
-		     : "=a" (ax), "=c" (cx), "=d" (dx)
-		     : [msr] "i" (MSR_IA32_SPEC_CTRL),
-		       [val] "i" (SPEC_CTRL_IBRS)
-		     : "memory");
-}
-
-static inline void unrestrict_branch_speculation(void)
-{
-	unsigned long ax, cx, dx;
-
-	asm volatile(ALTERNATIVE("",
-				 "movl %[msr], %%ecx\n\t"
-				 "movl %[val], %%eax\n\t"
-				 "movl $0, %%edx\n\t"
-				 "wrmsr",
-				 X86_FEATURE_USE_IBRS_FW)
-		     : "=a" (ax), "=c" (cx), "=d" (dx)
-		     : [msr] "i" (MSR_IA32_SPEC_CTRL),
-		       [val] "i" (0)
-		     : "memory");
-}
-
-static inline u64 save_and_restrict_branch_speculation(void)
-{
-	u64 ret;
-	unsigned long ax = 0, cx = 0, dx = 0;
-
-	/* save */
-	asm volatile(ALTERNATIVE("",
-				 "movl %[msr], %%ecx\n\t"
-				 "rdmsr\n\t",
-				 X86_FEATURE_USE_IBRS_FW)
-		     : "=a" (ax), "=c" (cx), "=d" (dx)
-		     : [msr] "i" (MSR_IA32_SPEC_CTRL)
-		     : "memory");
-
-	ret = ax | ((u64)dx << 32);
-
-	/* restrict speculation */
-	asm volatile(ALTERNATIVE("",
-				 "movl %[msr], %%ecx\n\t"
-				 "movl %[val], %%eax\n\t"
-				 "movl $0, %%edx\n\t"
-				 "wrmsr",
-				 X86_FEATURE_USE_IBRS_FW)
-		     : "=a" (ax), "=c" (cx), "=d" (dx)
-		     : [msr] "i" (MSR_IA32_SPEC_CTRL),
-		       [val] "i" (SPEC_CTRL_IBRS)
-		     : "memory");
-
-	return ret;
-}
-
-static inline void restore_branch_speculation(u64 val)
-{
-	unsigned long ax, cx, dx;
-
-	asm volatile(ALTERNATIVE("",
-				 "movl %[msr], %%ecx\n\t"
-				 "wrmsr",
-				 X86_FEATURE_USE_IBRS_FW)
-		     : "=a" (ax), "=c" (cx), "=d" (dx)
-		     : [msr] "i" (MSR_IA32_SPEC_CTRL),
-		       [val_low] "a" (val & 0xffffffff),
-		       [val_high] "d" (val >> 32)
-		     : "memory");
 }
 
 #endif /* __ASSEMBLY__ */
