@@ -27,8 +27,6 @@
 #include <asm/intel-family.h>
 
 static void __init spectre_v2_select_mitigation(void);
-DEFINE_PER_CPU(int, spec_ctrl_ibrs_fw_depth);
-EXPORT_PER_CPU_SYMBOL(spec_ctrl_ibrs_fw_depth);
 
 void __init check_bugs(void)
 {
@@ -97,6 +95,7 @@ static const char *spectre_v2_strings[] = {
 #define pr_fmt(fmt)     "Spectre V2 : " fmt
 
 enum spectre_v2_mitigation spectre_v2_enabled = SPECTRE_V2_NONE;
+EXPORT_SYMBOL_GPL(spectre_v2_enabled);
 
 #ifdef RETPOLINE
 static bool spectre_v2_bad_module;

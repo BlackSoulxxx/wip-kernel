@@ -59,6 +59,7 @@ ENTRY(__x86_indirect_thunk)
 	CFI_STARTPROC
 	calll	.Lpush_call_target
 .Lpush_capture_spec:
+	pause
 	lfence
 	jmp	.Lpush_capture_spec
 
