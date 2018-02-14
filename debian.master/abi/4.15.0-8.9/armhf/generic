@@ -10719,6 +10719,7 @@ EXPORT_SYMBOL vmlinux 0x00000000	vfs_unlink
 EXPORT_SYMBOL vmlinux 0x00000000	vfs_whiteout
 EXPORT_SYMBOL vmlinux 0x00000000	may_open
 EXPORT_SYMBOL vmlinux 0x00000000	may_open_dev
+EXPORT_SYMBOL vmlinux 0x00000000	spectre_v2_enabled
 EXPORT_SYMBOL vmlinux 0x00000000	vga_base
 EXPORT_SYMBOL vmlinux 0x00000000	vga_client_register
 EXPORT_SYMBOL vmlinux 0x00000000	vga_get
