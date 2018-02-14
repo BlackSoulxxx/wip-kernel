@@ -394,8 +394,8 @@ static int get_clock_voltage_dependency_table(struct pp_hwmgr *hwmgr,
 		dep_table->entries[i].clk =
 			((unsigned long)table->entries[i].ucClockHigh << 16) |
 			le16_to_cpu(table->entries[i].usClockLow);
-			dep_table->entries[i].v =
-				(unsigned long)le16_to_cpu(table->entries[i].usVoltage);
+		dep_table->entries[i].v =
+			(unsigned long)le16_to_cpu(table->entries[i].usVoltage);
 	}
 
 	*ptable = dep_table;
@@ -1042,7 +1042,7 @@ static int init_overdrive_limits_V2_1(struct pp_hwmgr *hwmgr,
 static int init_overdrive_limits(struct pp_hwmgr *hwmgr,
 			const ATOM_PPLIB_POWERPLAYTABLE *powerplay_table)
 {
-	int result;
+	int result = 0;
 	uint8_t frev, crev;
 	uint16_t size;
 
@@ -1074,12 +1074,11 @@ static int init_overdrive_limits(struct pp_hwmgr *hwmgr,
 				powerplay_table,
 				(const ATOM_FIRMWARE_INFO_V2_1 *)fw_info);
 
-	if (hwmgr->platform_descriptor.overdriveLimit.engineClock > 0
-		&& hwmgr->platform_descriptor.overdriveLimit.memoryClock > 0
-		&& !phm_cap_enabled(hwmgr->platform_descriptor.platformCaps,
-			PHM_PlatformCaps_OverdriveDisabledByPowerBudget))
-		phm_cap_set(hwmgr->platform_descriptor.platformCaps,
-				PHM_PlatformCaps_ACOverdriveSupport);
+	if (hwmgr->platform_descriptor.overdriveLimit.engineClock == 0
+		&& hwmgr->platform_descriptor.overdriveLimit.memoryClock == 0) {
+		hwmgr->od_enabled = false;
+		pr_debug("OverDrive feature not support by VBIOS\n");
+	}
 
 	return result;
 }

@@ -54,6 +54,8 @@ extern "C" {
 #define DRM_AMDGPU_VM			0x13
 #define DRM_AMDGPU_FENCE_TO_HANDLE	0x14
 #define DRM_AMDGPU_SCHED		0x15
+/* not upstream */
+#define DRM_AMDGPU_FREESYNC	        0x5d
 
 #define DRM_IOCTL_AMDGPU_GEM_CREATE	DRM_IOWR(DRM_COMMAND_BASE + DRM_AMDGPU_GEM_CREATE, union drm_amdgpu_gem_create)
 #define DRM_IOCTL_AMDGPU_GEM_MMAP	DRM_IOWR(DRM_COMMAND_BASE + DRM_AMDGPU_GEM_MMAP, union drm_amdgpu_gem_mmap)
@@ -71,6 +73,7 @@ extern "C" {
 #define DRM_IOCTL_AMDGPU_VM		DRM_IOWR(DRM_COMMAND_BASE + DRM_AMDGPU_VM, union drm_amdgpu_vm)
 #define DRM_IOCTL_AMDGPU_FENCE_TO_HANDLE DRM_IOWR(DRM_COMMAND_BASE + DRM_AMDGPU_FENCE_TO_HANDLE, union drm_amdgpu_fence_to_handle)
 #define DRM_IOCTL_AMDGPU_SCHED		DRM_IOW(DRM_COMMAND_BASE + DRM_AMDGPU_SCHED, union drm_amdgpu_sched)
+#define DRM_IOCTL_AMDGPU_FREESYNC	DRM_IOWR(DRM_COMMAND_BASE + DRM_AMDGPU_FREESYNC, struct drm_amdgpu_freesync)
 
 #define AMDGPU_GEM_DOMAIN_CPU		0x1
 #define AMDGPU_GEM_DOMAIN_GTT		0x2
@@ -160,6 +163,7 @@ union drm_amdgpu_bo_list {
 #define AMDGPU_CTX_OP_ALLOC_CTX	1
 #define AMDGPU_CTX_OP_FREE_CTX	2
 #define AMDGPU_CTX_OP_QUERY_STATE	3
+#define AMDGPU_CTX_OP_QUERY_STATE2	4
 
 /* GPU reset status */
 #define AMDGPU_CTX_NO_RESET		0
@@ -169,6 +173,13 @@ union drm_amdgpu_bo_list {
 #define AMDGPU_CTX_INNOCENT_RESET	2
 /* unknown cause */
 #define AMDGPU_CTX_UNKNOWN_RESET	3
+
+/* indicate gpu reset occured after ctx created */
+#define AMDGPU_CTX_QUERY2_FLAGS_RESET    (1<<0)
+/* indicate vram lost occured after ctx created */
+#define AMDGPU_CTX_QUERY2_FLAGS_VRAMLOST (1<<1)
+/* indicate some job from this context once cause gpu hang */
+#define AMDGPU_CTX_QUERY2_FLAGS_GUILTY   (1<<2)
 
 /* Context priority level */
 #define AMDGPU_CTX_PRIORITY_UNSET       -2048
@@ -656,6 +667,10 @@ struct drm_amdgpu_cs_chunk_data {
 	#define AMDGPU_INFO_SENSOR_VDDNB		0x6
 	/* Subquery id: Query graphics voltage */
 	#define AMDGPU_INFO_SENSOR_VDDGFX		0x7
+	/* Subquery id: Query GPU stable pstate shader clock */
+	#define AMDGPU_INFO_SENSOR_STABLE_PSTATE_GFX_SCLK		0x8
+	/* Subquery id: Query GPU stable pstate memory clock */
+	#define AMDGPU_INFO_SENSOR_STABLE_PSTATE_GFX_MCLK		0x9
 /* Number of VRAM page faults on CPU access. */
 #define AMDGPU_INFO_NUM_VRAM_CPU_PAGE_FAULTS	0x1E
 #define AMDGPU_INFO_VRAM_LOST_COUNTER		0x1F
@@ -869,6 +884,10 @@ struct drm_amdgpu_info_device {
 	__u32 _pad1;
 	/* always on cu bitmap */
 	__u32 cu_ao_bitmap[4][4];
+	/** Starting high virtual address for UMDs. */
+	__u64 high_va_offset;
+	/** The maximum high virtual address */
+	__u64 high_va_max;
 };
 
 struct drm_amdgpu_info_hw_ip {
@@ -922,6 +941,19 @@ struct drm_amdgpu_info_vce_clock_table {
 #define AMDGPU_FAMILY_CZ			135 /* Carrizo, Stoney */
 #define AMDGPU_FAMILY_AI			141 /* Vega10 */
 #define AMDGPU_FAMILY_RV			142 /* Raven */
+
+/*
+ * Definition of free sync enter and exit signals
+ * We may have more options in the future
+ */
+#define AMDGPU_FREESYNC_FULLSCREEN_ENTER		1
+#define AMDGPU_FREESYNC_FULLSCREEN_EXIT 		2
+
+struct drm_amdgpu_freesync {
+	__u32 op;			/* AMDGPU_FREESYNC_FULLSCREEN_ENTER or */
+				        /* AMDGPU_FREESYNC_FULLSCREEN_ENTER */
+	__u32 spare[7];
+};
 
 #if defined(__cplusplus)
 }

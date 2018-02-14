@@ -33,23 +33,20 @@
 /*******************************************************************************
  * Private functions
  ******************************************************************************/
-#define TMDS_MAX_PIXEL_CLOCK_IN_KHZ_UPMOST 297000
-static void update_stream_signal(struct dc_stream_state *stream)
+void update_stream_signal(struct dc_stream_state *stream)
 {
-	if (stream->output_signal == SIGNAL_TYPE_NONE) {
-		struct dc_sink *dc_sink = stream->sink;
 
-		if (dc_sink->sink_signal == SIGNAL_TYPE_NONE)
-			stream->signal = stream->sink->link->connector_signal;
-		else
-			stream->signal = dc_sink->sink_signal;
-	} else {
-		stream->signal = stream->output_signal;
-	}
+	struct dc_sink *dc_sink = stream->sink;
+
+	if (dc_sink->sink_signal == SIGNAL_TYPE_NONE)
+		stream->signal = stream->sink->link->connector_signal;
+	else
+		stream->signal = dc_sink->sink_signal;
 
 	if (dc_is_dvi_signal(stream->signal)) {
-		if (stream->timing.pix_clk_khz > TMDS_MAX_PIXEL_CLOCK_IN_KHZ_UPMOST &&
-			stream->sink->sink_signal != SIGNAL_TYPE_DVI_SINGLE_LINK)
+		if (stream->ctx->dc->caps.dual_link_dvi &&
+		    stream->timing.pix_clk_khz > TMDS_MAX_PIXEL_CLOCK &&
+		    stream->sink->sink_signal != SIGNAL_TYPE_DVI_SINGLE_LINK)
 			stream->signal = SIGNAL_TYPE_DVI_DUAL_LINK;
 		else
 			stream->signal = SIGNAL_TYPE_DVI_SINGLE_LINK;
@@ -229,7 +226,7 @@ bool dc_stream_set_cursor_attributes(
 		if (pipe_ctx->plane_res.dpp != NULL &&
 				pipe_ctx->plane_res.dpp->funcs->set_cursor_attributes != NULL)
 			pipe_ctx->plane_res.dpp->funcs->set_cursor_attributes(
-				pipe_ctx->plane_res.dpp, attributes);
+				pipe_ctx->plane_res.dpp, attributes->color_format);
 	}
 
 	stream->cursor_attributes = *attributes;
@@ -303,6 +300,8 @@ bool dc_stream_set_cursor_position(
 			dpp->funcs->set_cursor_position(dpp, &pos_cpy, &param, hubp->curs_attr.width);
 
 	}
+
+	stream->cursor_position = *position;
 
 	return true;
 }
