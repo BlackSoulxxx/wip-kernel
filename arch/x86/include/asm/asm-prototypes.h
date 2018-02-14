@@ -38,8 +38,4 @@ INDIRECT_THUNK(dx)
 INDIRECT_THUNK(si)
 INDIRECT_THUNK(di)
 INDIRECT_THUNK(bp)
-asmlinkage void __x86_indirect_thunk(void);
-asmlinkage void __fill_rsb(void);
-asmlinkage void __clear_rsb(void);
-
 #endif /* CONFIG_RETPOLINE */
