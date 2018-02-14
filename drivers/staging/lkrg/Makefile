@@ -17,7 +17,7 @@ lkrg-y = \
 		modules/exploit_detection/p_rb_ed_trees/p_rb_ed_pids/p_rb_ed_pids_tree.o \
 		modules/exploit_detection/syscalls/p_sys_execve/p_sys_execve.o \
 		modules/exploit_detection/syscalls/p_sys_execveat/p_sys_execveat.o \
-		src/modules/exploit_detection/syscalls/p_call_usermodehelper/p_call_usermodehelper.o \
+		modules/exploit_detection/syscalls/p_call_usermodehelper/p_call_usermodehelper.o \
 		modules/exploit_detection/syscalls/p_do_exit/p_do_exit.o \
 		modules/exploit_detection/syscalls/p_do_fork/p_do_fork.o \
 		modules/exploit_detection/syscalls/p_sys_setuid/p_sys_setuid.o \
