@@ -202,7 +202,7 @@ static enum spectre_v2_mitigation_cmd __init spectre_v2_parse_cmdline(void)
 	return cmd;
 }
 
-/* Check for Skylake-like CPUs (for RSB and IBRS handling) */
+/* Check for Skylake-like CPUs (for RSB handling) */
 static bool __init is_skylake_era(void)
 {
 	if (boot_cpu_data.x86_vendor == X86_VENDOR_INTEL &&
@@ -285,12 +285,12 @@ retpoline_auto:
 		setup_force_cpu_cap(X86_FEATURE_RETPOLINE);
 	}
 
-ibrs_all:
+ ibrs_all:
 	spectre_v2_enabled = mode;
 	pr_info("%s\n", spectre_v2_strings[mode]);
 
 	/*
-	 * If neither SMEP or PTI are available, there is a risk of
+	 * If neither SMEP nor PTI are available, there is a risk of
 	 * hitting userspace addresses in the RSB after a context switch
 	 * from a shallow call stack to a deeper one. To prevent this fill
 	 * the entire RSB, even when using IBRS.
@@ -304,24 +304,22 @@ ibrs_all:
 	if ((!boot_cpu_has(X86_FEATURE_PTI) &&
 	     !boot_cpu_has(X86_FEATURE_SMEP)) || is_skylake_era()) {
 		setup_force_cpu_cap(X86_FEATURE_RSB_CTXSW);
-		pr_info("Spectre mitigation: Filling RSB on context switch\n");
+		pr_info("Spectre v2 mitigation: Filling RSB on context switch\n");
 	}
 
 	/* Initialize Indirect Branch Prediction Barrier if supported */
 	if (boot_cpu_has(X86_FEATURE_IBPB)) {
 		setup_force_cpu_cap(X86_FEATURE_USE_IBPB);
-		pr_info("Spectre mitigation: Enabling Indirect Branch Prediction Barrier (IBPB)\n");
+		pr_info("Spectre v2 mitigation: Enabling Indirect Branch Prediction Barrier\n");
 	}
 
 	/*
 	 * Retpoline means the kernel is safe because it has no indirect
-	 * branches. But we don't know whether the firmware is safe, so
-	 * use IBRS to protect against that:
+	 * branches. But firmware isn't, so use IBRS to protect that.
 	 */
-
 	if (mode != SPECTRE_V2_IBRS_ALL && boot_cpu_has(X86_FEATURE_IBRS)) {
 		setup_force_cpu_cap(X86_FEATURE_USE_IBRS_FW);
-		pr_info("Spectre mitigation: Restricting branch speculation (enabling IBRS) for firmware calls\n");
+		pr_info("Enabling Restricted Speculation for firmware calls\n");
 	}
 }
 
