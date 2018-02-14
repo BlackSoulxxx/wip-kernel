@@ -11255,6 +11255,8 @@ EXPORT_SYMBOL vmlinux 0x00000000	vfs_symlink
 EXPORT_SYMBOL vmlinux 0x00000000	vfs_tmpfile
 EXPORT_SYMBOL vmlinux 0x00000000	vfs_unlink
 EXPORT_SYMBOL vmlinux 0x00000000	vfs_whiteout
+EXPORT_SYMBOL vmlinux 0x00000000	may_open
+EXPORT_SYMBOL vmlinux 0x00000000	may_open_dev
 EXPORT_SYMBOL vmlinux 0x00000000	vga_client_register
 EXPORT_SYMBOL vmlinux 0x00000000	vga_con
 EXPORT_SYMBOL vmlinux 0x00000000	vga_get

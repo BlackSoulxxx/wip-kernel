@@ -2903,6 +2903,7 @@ bool may_open_dev(const struct path *path)
 	return !(path->mnt->mnt_flags & MNT_NODEV) &&
 		!(path->mnt->mnt_sb->s_iflags & SB_I_NODEV);
 }
+EXPORT_SYMBOL(may_open_dev);
 
 static int may_open(const struct path *path, int acc_mode, int flag)
 {
@@ -2951,6 +2952,7 @@ static int may_open(const struct path *path, int acc_mode, int flag)
 
 	return 0;
 }
+EXPORT_SYMBOL(may_open);
 
 static int handle_truncate(struct file *filp)
 {
