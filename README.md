@@ -136,7 +136,7 @@ BUILDBOX automatically builds the packages. Look at the file date and the build 
 - /etc/default/grub
 
 ```bash
-GRUB_CMDLINE_LINUX_DEFAULT="spectre_v2=auto ipv6.disable=1 intremap=no_x2apic_optout acpi_osi=Linux intel_iommu=on swiotlb=32768 apparmor=0"
+GRUB_CMDLINE_LINUX_DEFAULT="spectre_v2=auto ipv6.disable=1 intremap=no_x2apic_optout acpi_osi=Linux acpi_backlight=vendor intel_iommu=on swiotlb=32768 apparmor=0"
 GRUB_CMDLINE_LINUX="systemd.gpt_auto=0"
 ```
 
