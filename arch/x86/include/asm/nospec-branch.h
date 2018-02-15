@@ -205,6 +205,8 @@ static inline bool spectre_v2_ibrs_all(void)
 extern char __indirect_thunk_start[];
 extern char __indirect_thunk_end[];
 
+DECLARE_PER_CPU(int, spec_ctrl_ibrs_fw_depth);
+
 /*
  * On VMEXIT we must ensure that no RSB predictions learned in the guest
  * can be followed in the host, by overwriting the RSB completely. Both
@@ -249,14 +251,16 @@ static inline void indirect_branch_prediction_barrier(void)
 static inline void firmware_restrict_branch_speculation_start(void)
 {
 	preempt_disable();
+	this_cpu_inc(spec_ctrl_ibrs_fw_depth);
 	alternative_msr_write(MSR_IA32_SPEC_CTRL, SPEC_CTRL_IBRS,
 			      X86_FEATURE_USE_IBRS_FW);
 }
 
 static inline void firmware_restrict_branch_speculation_end(void)
 {
-	alternative_msr_write(MSR_IA32_SPEC_CTRL, 0,
-			      X86_FEATURE_USE_IBRS_FW);
+	if (this_cpu_dec_return(spec_ctrl_ibrs_fw_depth) == 0)
+		alternative_msr_write(MSR_IA32_SPEC_CTRL, 0,
+				      X86_FEATURE_USE_IBRS_FW);
 	preempt_enable();
 }
 

@@ -27,6 +27,8 @@
 #include <asm/intel-family.h>
 
 static void __init spectre_v2_select_mitigation(void);
+DEFINE_PER_CPU(int, spec_ctrl_ibrs_fw_depth);
+EXPORT_PER_CPU_SYMBOL(spec_ctrl_ibrs_fw_depth);
 
 void __init check_bugs(void)
 {
