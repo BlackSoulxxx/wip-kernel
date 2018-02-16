@@ -96,7 +96,7 @@ static const char *spectre_v2_strings[] = {
 #undef pr_fmt
 #define pr_fmt(fmt)     "Spectre V2 : " fmt
 
-enum spectre_v2_mitigation spectre_v2_enabled = SPECTRE_V2_NONE;
+extern enum spectre_v2_mitigation spectre_v2_enabled = SPECTRE_V2_NONE;
 EXPORT_SYMBOL_GPL(spectre_v2_enabled);
 
 #ifdef RETPOLINE
