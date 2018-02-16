@@ -21,7 +21,7 @@
 #include "cpufreq_ondemand.h"
 
 /* On-demand governor macros */
-#if defined(CONFIG_ZEN_INTERACTIVE) && defined(CONFIG_SCHED_MUQSS)
+#if defined(CONFIG_ZEN_INTERACTIVE) && defined(CONFIG_SCHED_PDS)
 	#define DEF_FREQUENCY_UP_THRESHOLD	(45)
 	#define MICRO_FREQUENCY_UP_THRESHOLD	(45)
 #elif defined(CONFIG_ZEN_INTERACTIVE)
