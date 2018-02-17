@@ -230,6 +230,7 @@ static inline void vmexit_fill_RSB(void)
 
 #define alternative_msr_write(_msr, _val, _feature)		\
 	asm volatile(ALTERNATIVE("",				\
+				 ".align 16\n\t"		\
 				 "movl %[msr], %%ecx\n\t"	\
 				 "movl %[val], %%eax\n\t"	\
 				 "movl $0, %%edx\n\t"		\
