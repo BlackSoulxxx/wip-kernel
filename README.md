@@ -1,5 +1,5 @@
 # WIP Kernel 4.15.*
-WIP Patched Kernel Sources (Linux 4.15.3)
+WIP Patched Kernel Sources (Linux 4.15.4)
 
  - Full kernel adaptation to version Ubuntu 18.04 LTS Bionic.
 
