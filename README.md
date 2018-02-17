@@ -273,7 +273,7 @@ system is clean unless corruptions are detected.
 $ modprobe lkrg
 
 $ modinfo lkrg
-filename:       /lib/modules/4.15.3-wip-x17-broadwell/kernel/drivers/staging/lkrg/lkrg.ko
+filename:       /lib/modules/4.15.3-wip-x18-broadwell/kernel/drivers/staging/lkrg/lkrg.ko
 license:        GPL v2
 description:    pi3's Linux kernel Runtime Guard
 author:         Adam 'pi3' Zabrocki (http://pi3.com.pl)
@@ -283,7 +283,7 @@ staging:        Y
 retpoline:      Y
 intree:         Y
 name:           lkrg
-vermagic:       4.15.3-wip-x17-broadwell SMP mod_unload modversions retpoline
+vermagic:       4.15.3-wip-x18-broadwell SMP mod_unload modversions retpoline
 signat:         PKCS#7
 signer:
 sig_key:
