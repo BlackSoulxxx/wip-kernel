@@ -232,6 +232,7 @@ static inline void io_apic_init_mappings(void) { }
 
 static inline void setup_IO_APIC(void) { }
 static inline void enable_IO_APIC(void) { }
+static inline void restore_boot_irq_mode(void) { }
 
 #endif
 
