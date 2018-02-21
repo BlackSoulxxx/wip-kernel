@@ -357,8 +357,3 @@ not being able to recognise some mmc disk partitions at that stage of the boot p
 The workaround is to add systemd.gpt_auto=0 to the kernel command line.
 
 ```
-
-
-## Donate via BTC
-
-Wallet: 1KvWrbLhuzk8DSb2Yq2948bMj3uQvVTQCW
